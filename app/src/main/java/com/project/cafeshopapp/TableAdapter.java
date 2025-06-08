@@ -7,11 +7,12 @@ import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
+
 import java.util.List;
 
 public class TableAdapter extends BaseAdapter {
     private Context context;
-    private List<TableModel> tableList; // Sửa thành List<TableModel>
+    private List<TableModel> tableList;
 
     public TableAdapter(Context context, List<TableModel> tableList) {
         this.context = context;
@@ -53,31 +54,30 @@ public class TableAdapter extends BaseAdapter {
             holder = (ViewHolder) convertView.getTag();
         }
 
-        TableModel table = tableList.get(position); // Sử dụng TableModel
-
-//        switch (table.getStatus()) {
-//            case "serving":
-//                holder.icon.setImageResource(R.drawable.ic_reserved);
-//                holder.statusText.setText("Đang phục vụ");
-//                break;
-//            case "paid":
-//                holder.icon.setImageResource(R.drawable.ic_check_done);
-//                holder.statusText.setText("Đã thanh toán");
-//                break;
-//            case "waiting":
-//                holder.icon.setImageResource(R.drawable.ic_coffee_clock);
-//                holder.statusText.setText("Đang chờ");
-//                break;
-//            case "empty":
-//            default:
-//                holder.icon.setImageResource(R.drawable.ic_table);
-//                holder.statusText.setText("Trống");
-//                break;
-//        }
-
-        // Sử dụng table.getTableId() thay vì table.getNumber()
+        TableModel table = tableList.get(position);
         String formattedNumber = String.format("#Bàn %02d", table.getTableId());
         holder.number.setText(formattedNumber);
+
+        // Gán icon và text tùy theo trạng thái
+        switch (table.getStatus()) {
+            case "serving":
+                holder.icon.setImageResource(R.drawable.ic_reserved);
+                holder.statusText.setText("Đang phục vụ");
+                break;
+            case "paid":
+                holder.icon.setImageResource(R.drawable.ic_check_done);
+                holder.statusText.setText("Đã thanh toán");
+                break;
+            case "waiting":
+                holder.icon.setImageResource(R.drawable.ic_coffee_clock);
+                holder.statusText.setText("Đang chờ");
+                break;
+            case "empty":
+            default:
+                holder.icon.setImageResource(R.drawable.ic_table);
+                holder.statusText.setText("Trống");
+                break;
+        }
 
         return convertView;
     }

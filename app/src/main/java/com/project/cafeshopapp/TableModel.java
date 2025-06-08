@@ -3,27 +3,26 @@ package com.project.cafeshopapp;
 import com.google.gson.annotations.SerializedName;
 
 public class TableModel {
-    @SerializedName("id")
-    private String id;
-
     @SerializedName("tableId")
-    private int tableId;  // Đây là số bàn
+    private int tableId;
 
-    @SerializedName("createdAt")
-    private String createdAt;
+    @SerializedName("status")
+    private String status;
 
-    @SerializedName("updatedAt")
-    private String updatedAt;
+    // Getter
+    public int getTableId() {
+        return tableId;
+    }
 
-    // Getters
-    public String getId() { return id; }
-    public int getTableId() { return tableId; }  // Sử dụng getTableId() cho số bàn
-    public String getCreatedAt() { return createdAt; }
-    public String getUpdatedAt() { return updatedAt; }
+    public String getStatus() {
+        return status;
+    }
 
-    // Setters
-    public void setId(String id) { this.id = id; }
-    public void setTableId(int tableId) { this.tableId = tableId; }
-    public void setCreatedAt(String createdAt) { this.createdAt = createdAt; }
-    public void setUpdatedAt(String updatedAt) { this.updatedAt = updatedAt; }
+    public void setTableId(int tableId) {
+        this.tableId = tableId;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
 }
