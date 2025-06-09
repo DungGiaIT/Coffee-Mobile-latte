@@ -1,16 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:padding="16dp">
+    android:padding="16dp"
+    android:background="#FFF9F0"> <!-- Consistent light background -->
 
     <TextView
         android:id="@+id/tableLabel"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:textSize="20sp"
-        android:textStyle="bold"/>
+        android:textSize="22sp"
+        android:textStyle="bold"
+        android:textColor="#3E2723"
+        android:paddingBottom="12dp"
+        android:text="Bàn 1 - Đơn hàng"/> <!-- Example text -->
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerView"
@@ -18,11 +23,29 @@
         android:layout_height="0dp"
         android:layout_weight="1"/>
 
-    <Button
+    <!-- Optional: Empty state view -->
+    <TextView
+        android:id="@+id/emptyOrderText"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:text="Chưa có món nào trong đơn hàng này."
+        android:gravity="center"
+        android:textSize="16sp"
+        android:textColor="#757575"
+        android:visibility="gone"/>
+
+    <com.google.android.material.button.MaterialButton
         android:id="@+id/confirmBtn"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="Xác nhận hoàn thành"
-        android:backgroundTint="#4CAF50"
-        android:textColor="#FFFFFF"/>
+        android:paddingTop="12dp"
+        android:paddingBottom="12dp"
+        app:icon="@drawable/ic_check_done"
+    app:iconGravity="textStart"
+    android:layout_marginTop="16dp"
+    app:backgroundTint="#4CAF50"
+    android:textColor="#FFFFFF"
+    app:cornerRadius="8dp"/>
 </LinearLayout>

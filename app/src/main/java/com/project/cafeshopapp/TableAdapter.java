@@ -48,7 +48,7 @@ public class TableAdapter extends BaseAdapter {
             holder = new ViewHolder();
             holder.icon = convertView.findViewById(R.id.tableIcon);
             holder.number = convertView.findViewById(R.id.tableNumber);
-            holder.statusText = convertView.findViewById(R.id.tableStatusText);
+            holder.statusText = convertView.findViewById(R.id.tableStatus);
             convertView.setTag(holder);
         } else {
             holder = (ViewHolder) convertView.getTag();

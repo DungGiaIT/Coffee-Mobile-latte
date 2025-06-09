@@ -2,8 +2,8 @@ package com.project.cafeshopapp;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.util.Log;
 import android.widget.GridView;
+import android.widget.ImageButton;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -16,32 +16,49 @@ import retrofit2.Callback;
 import retrofit2.Response;
 
 public class TableActivity extends AppCompatActivity {
-    GridView gridView;
-    List<TableModel> tableList = new ArrayList<>();
-    TableAdapter adapter;
-    ApiService apiService;
+    private GridView gridView;
+    private ImageButton btnLogout;
+    private List<TableModel> tableList = new ArrayList<>();
+    private TableAdapter adapter;
+    private ApiService apiService;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_table);
 
+        initViews();
+        setupAdapter();
+        fetchTablesFromApi();
+    }
+
+    private void initViews() {
         gridView = findViewById(R.id.gridView);
-        adapter = new TableAdapter(this, tableList);
-        gridView.setAdapter(adapter);
+        btnLogout = findViewById(R.id.btnLogout);
 
         apiService = ApiClient.getClient().create(ApiService.class);
 
-        fetchTablesFromApi();
+        btnLogout.setOnClickListener(v -> {
+            Intent intent = new Intent(TableActivity.this, LoginActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            startActivity(intent);
+            finish();
+        });
+    }
+
+    private void setupAdapter() {
+        adapter = new TableAdapter(this, tableList);
+        gridView.setAdapter(adapter);
 
         gridView.setOnItemClickListener((parent, view, position, id) -> {
-            int tableId = tableList.get(position).getTableId();
+            TableModel selectedTable = tableList.get(position);
+            int tableId = selectedTable.getTableId();
 
-            // Gọi API để cập nhật trạng thái bàn thành "serving"
+            // Cập nhật trạng thái bàn thành "serving"
             TableModel updatedTable = new TableModel();
             updatedTable.setStatus("serving");
 
-            Call<List<TableModel>> updateCall = apiService.updateTableStatus(tableId, updatedTable);
+            Call<List<TableModel>> updateCall = apiService.updateTableStatus("eq." + tableId, updatedTable);
             updateCall.enqueue(new Callback<List<TableModel>>() {
                 @Override
                 public void onResponse(Call<List<TableModel>> call, Response<List<TableModel>> response) {
@@ -63,7 +80,6 @@ public class TableActivity extends AppCompatActivity {
 
                 @Override
                 public void onFailure(Call<List<TableModel>> call, Throwable t) {
-                    t.printStackTrace();
                     Toast.makeText(TableActivity.this, "Lỗi kết nối khi cập nhật bàn", Toast.LENGTH_SHORT).show();
                 }
             });
@@ -71,7 +87,7 @@ public class TableActivity extends AppCompatActivity {
     }
 
     private void fetchTablesFromApi() {
-        Call<List<TableModel>> call = apiService.getTables();
+        Call<List<TableModel>> call = apiService.getTables("*");
 
         call.enqueue(new Callback<List<TableModel>>() {
             @Override
@@ -87,9 +103,15 @@ public class TableActivity extends AppCompatActivity {
 
             @Override
             public void onFailure(Call<List<TableModel>> call, Throwable t) {
-                t.printStackTrace();
                 Toast.makeText(TableActivity.this, "Lỗi kết nối: " + t.getMessage(), Toast.LENGTH_LONG).show();
             }
         });
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        // Refresh dữ liệu khi quay lại activity
+        fetchTablesFromApi();
     }
 }

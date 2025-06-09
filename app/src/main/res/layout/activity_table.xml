@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
@@ -7,66 +8,65 @@
     android:padding="16dp">
 
     <!-- Header -->
-    <LinearLayout
+    <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center_vertical"
         android:paddingBottom="8dp">
 
-        <ImageView
-            android:layout_width="32dp"
-            android:layout_height="32dp"
-            android:src="@drawable/ic_coffee_logo"
-            android:contentDescription="Logo" />
-
-        <TextView
+        <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="COFFEE SHOP"
-            android:textSize="24sp"
-            android:textStyle="bold"
-            android:fontFamily="serif"
-            android:textColor="#3E2723"
-            android:layout_marginStart="8dp" />
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:gravity="end">
+            android:gravity="center_vertical"
+            android:layout_alignParentStart="true"
+            android:layout_centerVertical="true">
 
-            <ImageButton
-                android:id="@+id/btnLogout"
+            <ImageView
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:src="@drawable/ic_coffee_logo"
+                android:contentDescription="Logo" />
+
+            <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:src="@drawable/baseline_logout_24"
-                android:contentDescription="Đăng xuất"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                android:padding="8dp"
-                android:layout_margin="8dp" />
+                android:text="COFFEE SHOP"
+                android:textSize="24sp"
+                android:textStyle="bold"
+                android:fontFamily="serif"
+                android:textColor="#3E2723"
+                android:layout_marginStart="8dp" />
         </LinearLayout>
-    </LinearLayout>
+
+        <ImageButton
+            android:id="@+id/btnLogout"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/baseline_logout_24"
+            android:contentDescription="Đăng xuất"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:padding="8dp"
+            android:layout_alignParentEnd="true"
+            android:layout_centerVertical="true"/>
+    </RelativeLayout>
 
     <!-- Menu bar -->
     <View
         android:layout_width="match_parent"
         android:layout_height="1dp"
         android:background="#803E2723"
-        android:layout_marginBottom="8dp" />
+        android:layout_marginBottom="16dp" /> <!-- Increased margin -->
 
-    <!-- GridView bàn cafe (chiếm toàn bộ phần nội dung) -->
+    <!-- GridView bàn cafe -->
     <GridView
         android:id="@+id/gridView"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:numColumns="2"
+        android:numColumns="auto_fit"
+        android:columnWidth="160dp"
         android:verticalSpacing="16dp"
         android:horizontalSpacing="16dp"
         android:gravity="center"
-        android:stretchMode="columnWidth" />
-
-
-
-
+        android:stretchMode="spacingWidthUniform" />
 </LinearLayout>

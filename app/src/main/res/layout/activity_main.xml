@@ -1,135 +1,161 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/main"
-    xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:background="@drawable/bg_craft_texture"
-    android:padding="16dp">
+    android:background="@drawable/bg_craft_texture">
 
-    <!-- Header -->
     <LinearLayout
+        android:id="@+id/header_content"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center_vertical"
-        android:paddingBottom="8dp">
+        android:orientation="vertical"
+        android:padding="16dp">
 
-        <ImageView
-            android:layout_width="32dp"
-            android:layout_height="32dp"
-            android:src="@drawable/ic_coffee_logo"
-            android:contentDescription="Logo" />
-
-        <TextView
-            android:layout_width="wrap_content"
+        <!-- Header -->
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="COFFEE SHOP"
-            android:textSize="24sp"
-            android:textStyle="bold"
-            android:fontFamily="serif"
-            android:textColor="#3E2723"
-            android:layout_marginStart="8dp" />
-    </LinearLayout>
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:paddingBottom="8dp">
 
-    <!-- Menu bar -->
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:background="#803E2723"
-        android:layout_marginBottom="8dp" />
+            <ImageView
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:src="@drawable/ic_coffee_logo"
+                android:contentDescription="Logo" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="COFFEE SHOP"
+                android:textSize="24sp"
+                android:textStyle="bold"
+                android:fontFamily="serif"
+                android:textColor="@color/primary_brown"
+                android:layout_marginStart="8dp" />
+        </LinearLayout>
+
+        <!-- Menu bar -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="@color/divider_brown"
+            android:layout_marginBottom="8dp" />
+    </LinearLayout>
 
     <!-- Main Content -->
     <FrameLayout
+        android:id="@+id/main_content_frame"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1">
+        android:layout_height="match_parent"
+        android:layout_below="@id/header_content"
+        android:layout_above="@+id/bottom_navigation_view">
 
         <!-- GridView bàn cafe -->
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/recyclerViewTables"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:padding="8dp"/>
+            android:padding="8dp"
+            android:clipToPadding="false"/>
 
         <!-- Thông tin nhân viên (ẩn mặc định) -->
-        <LinearLayout
+        <ScrollView
             android:id="@+id/staffInfoLayout"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:orientation="vertical"
-            android:padding="16dp"
-            android:background="#FFF9F0"
-            android:visibility="gone">
+            android:background="@color/light_cream"
+            android:visibility="gone"
+            android:clickable="true"
+            android:focusable="true">
 
-            <TextView
-                android:layout_width="wrap_content"
+            <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="THÔNG TIN NHÂN VIÊN"
-                android:textStyle="bold"
-                android:textColor="#5D4037"
-                android:textSize="18sp"
-                android:layout_marginBottom="12dp" />
+                android:orientation="vertical"
+                android:padding="24dp">
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Tên: Nguyễn Văn A"
-                android:textSize="16sp" />
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="THÔNG TIN NHÂN VIÊN"
+                    android:textStyle="bold"
+                    android:textColor="@color/secondary_brown"
+                    android:textSize="20sp"
+                    android:layout_marginBottom="24dp"
+                    android:layout_gravity="center_horizontal" />
 
+                <!-- Staff Avatar Placeholder -->
+                <ImageView
+                    android:layout_width="80dp"
+                    android:layout_height="80dp"
+                    android:src="@drawable/ic_user"
+                    android:layout_gravity="center_horizontal"
+                    android:layout_marginBottom="16dp"
+                    android:background="@drawable/circle_background"
+                    android:padding="16dp"/>
 
-            <Button
-                android:id="@+id/btnBack"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Quay lại"
-                android:layout_marginTop="20dp"
-                android:backgroundTint="#6D4C41"
-                android:textColor="#FFFFFF" />
-        </LinearLayout>
+                <!-- Staff Details Card -->
+                <com.google.android.material.card.MaterialCardView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    app:cardCornerRadius="12dp"
+                    app:cardElevation="4dp"
+                    app:cardUseCompatPadding="true"
+                    android:layout_marginBottom="24dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="20dp">
+
+                        <TextView
+                            android:id="@+id/staffNameTextView"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Tên: Nguyễn Văn A"
+                            android:textSize="16sp"
+                            android:textColor="@color/text_primary"
+                            android:lineSpacingExtra="4dp"/>
+
+                        <TextView
+                            android:id="@+id/staffLoginTimeTextView"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Giờ đăng nhập: 08:30"
+                            android:textSize="14sp"
+                            android:textColor="@color/text_hint"
+                            android:layout_marginTop="8dp"/>
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnBack"
+                    style="@style/Widget.MaterialComponents.Button.TextButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Quay lại"
+                    android:textColor="@color/light_brown"
+                    android:layout_gravity="center_horizontal"
+                    app:icon="@drawable/outline_arrow_back_24backichjkhjhjkhjkhhkjgy"
+                    app:iconGravity="textStart" />
+            </LinearLayout>
+        </ScrollView>
     </FrameLayout>
 
-    <LinearLayout
+    <com.google.android.material.bottomnavigation.BottomNavigationView
+        android:id="@+id/bottom_navigation_view"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center"
-        android:weightSum="4"
-        android:padding="12dp"
-        android:background="#D7CCC8">
+        android:layout_alignParentBottom="true"
+        android:background="@color/bottom_nav_background"
+        app:itemIconTint="@color/bottom_nav_item_color_selector"
+        app:itemTextColor="@color/bottom_nav_item_color_selector"
+        app:menu="@menu/bottom_navigation_menu"
+        app:elevation="8dp" />
 
-        <ImageView
-            android:id="@+id/iconHome"
-            android:layout_width="0dp"
-            android:layout_height="24dp"
-            android:layout_weight="1"
-            android:src="@drawable/ic_home"
-            android:contentDescription="Trang chủ" />
-
-        <ImageView
-            android:id="@+id/iconOrder"
-            android:layout_width="0dp"
-            android:layout_height="24dp"
-            android:layout_weight="1"
-            android:src="@drawable/ic_order"
-            android:contentDescription="Đơn hàng" />
-
-        <ImageView
-            android:id="@+id/iconNotify"
-            android:layout_width="0dp"
-            android:layout_height="24dp"
-            android:layout_weight="1"
-            android:src="@drawable/ic_notify"
-            android:contentDescription="Thông báo" />
-
-        <ImageView
-            android:id="@+id/iconProfile"
-            android:layout_width="0dp"
-            android:layout_height="24dp"
-            android:layout_weight="1"
-            android:src="@drawable/ic_profile"
-            android:contentDescription="Cá nhân" />
-    </LinearLayout>
-
-</LinearLayout>
+</RelativeLayout>

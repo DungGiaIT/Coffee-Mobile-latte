@@ -1,39 +1,44 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="150dp"
-    android:layout_height="150dp"
-    android:orientation="vertical"
-    android:padding="12dp"
-    android:gravity="center"
-    android:background="@drawable/bg_table_item"
-    android:elevation="4dp">
+    android:layout_height="wrap_content"
+    app:cardCornerRadius="12dp"
+    app:cardElevation="4dp"
+    app:cardUseCompatPadding="true">
 
-    <!-- Số bàn -->
+    <LinearLayout
+        android:id="@+id/tableItemLayout"
+        android:layout_width="match_parent"
+        android:layout_height="120dp"
+    android:orientation="vertical"
+    android:gravity="center"
+    android:padding="16dp"
+    android:background="?android:attr/selectableItemBackground">
+
+    <ImageView
+        android:id="@+id/tableIcon"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:src="@drawable/ic_table"
+    app:tint="#5D4037"
+    android:layout_marginBottom="8dp"/>
+
     <TextView
         android:id="@+id/tableNumber"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="#Bàn 01"
-        android:textStyle="bold"
+        android:text="Bàn 5"
         android:textSize="18sp"
-        android:textColor="#3E2723" />
+        android:textStyle="bold"
+        android:textColor="#3E2723"/>
 
-    <!-- Icon trạng thái -->
-    <ImageView
-        android:id="@+id/tableIcon"
-        android:layout_width="48dp"
-        android:layout_height="48dp"
-        android:layout_marginTop="12dp"
-        android:contentDescription="Trạng thái bàn"
-        android:src="@drawable/ic_reserved" />
-
-    <!-- Trạng thái mô tả -->
     <TextView
-        android:id="@+id/tableStatusText"
+        android:id="@+id/tableStatus"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Đang phục vụ"
-        android:textColor="#6D4C41"
+        android:text="Còn trống"
         android:textSize="14sp"
-        android:layout_marginTop="8dp" />
+        android:textColor="#4CAF50" />
 </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>

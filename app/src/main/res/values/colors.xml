@@ -1,6 +1,36 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="black">#FF000000</color>
-    <color name="white">#FFFFFFFF</color>
-    
+    <!-- App primary colors -->
+    <color name="primary_brown">#3E2723</color>
+    <color name="secondary_brown">#5D4037</color>
+    <color name="light_brown">#6D4C41</color>
+    <color name="background_cream">#FFF3E0</color>
+    <color name="light_cream">#FFF9F0</color>
+    <color name="divider_brown">#803E2723</color>
+    <color name="bottom_nav_background">#D7CCC8</color>
+
+    <!-- Status colors -->
+    <color name="status_serving">#FF9800</color>        <!-- Orange for serving -->
+    <color name="status_paid">#2196F3</color>           <!-- Blue for paid -->
+    <color name="status_waiting">#F44336</color>        <!-- Red for waiting -->
+    <color name="status_empty">#4CAF50</color>          <!-- Green for empty -->
+
+    <!-- Button colors -->
+    <color name="button_primary">#4CAF50</color>
+    <color name="button_secondary">#6D4C41</color>
+
+    <!-- Text colors -->
+    <color name="text_primary">#3E2723</color>
+    <color name="text_secondary">#5D4037</color>
+    <color name="text_hint">#757575</color>
+    <color name="text_disabled">#BDBDBD</color>
+
+    <!-- Navigation colors -->
+    <color name="nav_selected">#3E2723</color>
+    <color name="nav_unselected">#757575</color>
+
+    <!-- Additional common colors -->
+    <color name="white">#FFFFFF</color>
+    <color name="black">#000000</color>
+    <color name="transparent">#00000000</color>
 </resources>
