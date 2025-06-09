@@ -33,4 +33,6 @@
     <color name="white">#FFFFFF</color>
     <color name="black">#000000</color>
     <color name="transparent">#00000000</color>
+    <color name="success_green">#4CAF50</color>
+    <color name="error_red">#F44336</color>
 </resources>

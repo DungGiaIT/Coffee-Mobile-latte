@@ -38,7 +38,7 @@ public class OrderAdapter extends RecyclerView.Adapter<OrderAdapter.ViewHolder> 
         public ViewHolder(View itemView) {
             super(itemView);
             name = itemView.findViewById(R.id.itemName);
-            note = itemView.findViewById(R.id.itemNote);
+//            note = itemView.findViewById(R.id.itemNote);
             quantity = itemView.findViewById(R.id.itemQty);
         }
     }

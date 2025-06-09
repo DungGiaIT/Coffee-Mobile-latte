@@ -5,32 +5,41 @@ import java.util.List;
 import retrofit2.Call;
 import retrofit2.http.Body;
 import retrofit2.http.GET;
-import retrofit2.http.Headers;
 import retrofit2.http.PATCH;
+import retrofit2.http.POST;
 import retrofit2.http.Query;
 
 public interface ApiService {
 
-    @Headers({
-            "apikey: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVmZ3hzaWNxbGFyYXFhZXppb2hmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDg3MTk0ODIsImV4cCI6MjA2NDI5NTQ4Mn0.scTWf1VRknpvZ4WcDzswtWRPa9EmuJOpcsy86emIUP4",
-            "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVmZ3hzaWNxbGFyYXFhZXppb2hmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDg3MTk0ODIsImV4cCI6MjA2NDI5NTQ4Mn0.scTWf1VRknpvZ4WcDzswtWRPa9EmuJOpcsy86emIUP4",
-            "Accept: application/json",
-            "Content-Type: application/json",
-            "Prefer: return=representation"
-    })
+    // 🏠 ManagerTable APIs
+    @GET("ManagerTable")
+    Call<List<TableModel>> getAllTables();
 
     @GET("ManagerTable")
-    Call<List<TableModel>> getTables(@Query("select") String select);
+    Call<List<TableModel>> getAllTablesWithSelect(@Query("select") String select);
+
+    @GET("ManagerTable")
+    Call<List<TableModel>> getTableById(@Query("tableId") String tableIdFilter);
+
+    @GET("ManagerTable")
+    Call<List<TableModel>> getTablesByStatus(@Query("status") String statusFilter);
 
     @PATCH("ManagerTable")
-    Call<List<TableModel>> updateTableStatus(@Query("tableId") String filter, @Body TableModel tableModel);
+    Call<List<TableModel>> updateTableStatusById(@Query("tableId") String tableIdFilter, @Body TableUpdateRequest updateRequest);
 
-    @GET("Staff")
-    Call<List<StaffModel>> getStaffByCode(@Query("select") String select, @Query("code") String filter);
+    @PATCH("ManagerTable")
+    Call<List<TableModel>> updateTableStatusByRecordId(@Query("id") String idFilter, @Body TableUpdateRequest updateRequest);
 
-    @GET("products") // Giả sử bạn có bảng products
-    Call<List<Product>> getProducts(@Query("select") String select);
+    @POST("ManagerTable")
+    Call<List<TableModel>> createTable(@Body TableModel tableModel);
 
-    @GET("orders") // Giả sử bạn có bảng orders
-    Call<List<OrderItem>> getOrdersByTable(@Query("select") String select, @Query("tableId") String filter);
+    // 🛒 Product APIs (if needed)
+    @GET("Product")
+    Call<List<Product>> getProducts();
+
+    // 📝 Order APIs (if needed)
+    @GET("Order")
+    Call<List<OrderItem>> getOrdersByTable(@Query("tableId") String tableIdFilter);
+
+    // 🗑️ REMOVED: getStaffByCode - không cần vì không dùng Staff table
 }
