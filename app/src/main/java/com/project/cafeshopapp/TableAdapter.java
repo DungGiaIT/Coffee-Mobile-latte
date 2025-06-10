@@ -8,6 +8,8 @@ import android.widget.BaseAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import androidx.core.content.ContextCompat;
+
 import java.util.List;
 
 public class TableAdapter extends BaseAdapter {
@@ -21,12 +23,12 @@ public class TableAdapter extends BaseAdapter {
 
     @Override
     public int getCount() {
-        return tableList.size();
+        return tableList != null ? tableList.size() : 0;
     }
 
     @Override
     public Object getItem(int position) {
-        return tableList.get(position);
+        return tableList != null && position < tableList.size() ? tableList.get(position) : null;
     }
 
     @Override
@@ -54,31 +56,42 @@ public class TableAdapter extends BaseAdapter {
             holder = (ViewHolder) convertView.getTag();
         }
 
-        TableModel table = tableList.get(position);
-        String formattedNumber = String.format("#Bàn %02d", table.getTableId());
-        holder.number.setText(formattedNumber);
+        if (position < tableList.size()) {
+            TableModel table = tableList.get(position);
+            String formattedNumber = String.format("Bàn %d", table.getTableId());
+            holder.number.setText(formattedNumber);
 
-        // Gán icon và text tùy theo trạng thái
-        switch (table.getStatus()) {
-            case "serving":
-                holder.icon.setImageResource(R.drawable.ic_reserved);
-                holder.statusText.setText("Đang phục vụ");
-                break;
-            case "paid":
-                holder.icon.setImageResource(R.drawable.ic_check_done);
-                holder.statusText.setText("Đã thanh toán");
-                break;
-            case "waiting":
-                holder.icon.setImageResource(R.drawable.ic_coffee_clock);
-                holder.statusText.setText("Đang chờ");
-                break;
-            case "empty":
-            default:
-                holder.icon.setImageResource(R.drawable.ic_table);
-                holder.statusText.setText("Trống");
-                break;
+            // Handle status based on database values
+            String status = table.getStatus() != null ? table.getStatus().toLowerCase() : "available";
+
+            switch (status) {
+                case "reserved":
+                    setTableStatus(holder, R.drawable.ic_reserved, "Đã đặt", R.color.status_serving);
+                    break;
+                case "occupied":
+                case "serving":
+                    setTableStatus(holder, R.drawable.ic_coffee_clock, "Đang phục vụ", R.color.status_waiting);
+                    break;
+                case "available":
+                default:
+                    setTableStatus(holder, R.drawable.ic_table, "Còn trống", R.color.status_empty);
+                    break;
+            }
         }
 
         return convertView;
+    }
+
+    private void setTableStatus(ViewHolder holder, int iconRes, String statusText, int colorRes) {
+        try {
+            holder.icon.setImageResource(iconRes);
+            holder.statusText.setText(statusText);
+            holder.statusText.setTextColor(ContextCompat.getColor(context, colorRes));
+        } catch (Exception e) {
+            // Fallback if resources not found
+            holder.icon.setImageResource(android.R.drawable.ic_menu_info_details);
+            holder.statusText.setText(statusText);
+            holder.statusText.setTextColor(ContextCompat.getColor(context, R.color.text_primary));
+        }
     }
 }

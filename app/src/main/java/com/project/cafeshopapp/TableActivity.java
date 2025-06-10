@@ -1,7 +1,9 @@
 package com.project.cafeshopapp;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.GridView;
 import android.widget.ImageButton;
 import android.widget.Toast;
@@ -16,6 +18,8 @@ import retrofit2.Callback;
 import retrofit2.Response;
 
 public class TableActivity extends AppCompatActivity {
+    private static final String TAG = "TableActivity";
+
     private GridView gridView;
     private ImageButton btnLogout;
     private List<TableModel> tableList = new ArrayList<>();
@@ -39,6 +43,9 @@ public class TableActivity extends AppCompatActivity {
         apiService = ApiClient.getClient().create(ApiService.class);
 
         btnLogout.setOnClickListener(v -> {
+            // Clear login info
+            clearLoginInfo();
+
             Intent intent = new Intent(TableActivity.this, LoginActivity.class);
             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
             startActivity(intent);
@@ -46,72 +53,147 @@ public class TableActivity extends AppCompatActivity {
         });
     }
 
+    private void clearLoginInfo() {
+        SharedPreferences prefs = getSharedPreferences("staff_prefs", MODE_PRIVATE);
+        SharedPreferences.Editor editor = prefs.edit();
+        editor.clear();
+        editor.apply();
+    }
+
     private void setupAdapter() {
         adapter = new TableAdapter(this, tableList);
         gridView.setAdapter(adapter);
 
         gridView.setOnItemClickListener((parent, view, position, id) -> {
-            TableModel selectedTable = tableList.get(position);
-            int tableId = selectedTable.getTableId();
+            if (position < tableList.size()) {
+                TableModel selectedTable = tableList.get(position);
+                int tableId = selectedTable.getTableId();
 
-            // Cập nhật trạng thái bàn thành "serving"
-            TableModel updatedTable = new TableModel();
-            updatedTable.setStatus("serving");
+                Log.d(TAG, "Table clicked: " + tableId + " - Current status: " + selectedTable.getStatus());
 
-            Call<List<TableModel>> updateCall = apiService.updateTableStatus("eq." + tableId, updatedTable);
-            updateCall.enqueue(new Callback<List<TableModel>>() {
-                @Override
-                public void onResponse(Call<List<TableModel>> call, Response<List<TableModel>> response) {
-                    if (response.isSuccessful()) {
-                        Toast.makeText(TableActivity.this, "Bàn #" + tableId + " đang phục vụ", Toast.LENGTH_SHORT).show();
-
-                        // Cập nhật UI
-                        tableList.get(position).setStatus("serving");
-                        adapter.notifyDataSetChanged();
-
-                        // Chuyển sang OrderActivity
-                        Intent intent = new Intent(TableActivity.this, OrderActivity.class);
-                        intent.putExtra("tableNumber", tableId);
-                        startActivity(intent);
-                    } else {
-                        Toast.makeText(TableActivity.this, "Không thể cập nhật bàn", Toast.LENGTH_SHORT).show();
-                    }
-                }
-
-                @Override
-                public void onFailure(Call<List<TableModel>> call, Throwable t) {
-                    Toast.makeText(TableActivity.this, "Lỗi kết nối khi cập nhật bàn", Toast.LENGTH_SHORT).show();
-                }
-            });
+                // Update table status to "reserved" when clicked
+                updateTableStatus(tableId, "reserved", position);
+            }
         });
     }
 
-    private void fetchTablesFromApi() {
-        Call<List<TableModel>> call = apiService.getTables("*");
+    private void updateTableStatus(int tableId, String newStatus, int position) {
+        // Create update request
+        TableUpdateRequest updateRequest = new TableUpdateRequest(newStatus);
 
-        call.enqueue(new Callback<List<TableModel>>() {
+        Call<List<TableModel>> updateCall = apiService.updateTableStatusById("eq." + tableId, updateRequest);
+        updateCall.enqueue(new Callback<List<TableModel>>() {
             @Override
             public void onResponse(Call<List<TableModel>> call, Response<List<TableModel>> response) {
-                if (response.isSuccessful() && response.body() != null) {
-                    tableList.clear();
-                    tableList.addAll(response.body());
-                    adapter.notifyDataSetChanged();
+                if (response.isSuccessful()) {
+                    Log.d(TAG, "Table " + tableId + " status updated to " + newStatus);
+                    Toast.makeText(TableActivity.this, "Bàn #" + tableId + " đã được cập nhật", Toast.LENGTH_SHORT).show();
+
+                    // Update local data
+                    if (position < tableList.size()) {
+                        tableList.get(position).setStatus(newStatus);
+                        adapter.notifyDataSetChanged();
+                    }
+
+                    // Navigate to OrderActivity
+                    Intent intent = new Intent(TableActivity.this, OrderActivity.class);
+                    intent.putExtra("tableNumber", tableId);
+                    intent.putExtra("tableStatus", newStatus);
+                    startActivity(intent);
                 } else {
-                    Toast.makeText(TableActivity.this, "Không tải được dữ liệu bàn", Toast.LENGTH_SHORT).show();
+                    Log.e(TAG, "Failed to update table status. Response code: " + response.code());
+                    Toast.makeText(TableActivity.this, "Không thể cập nhật bàn", Toast.LENGTH_SHORT).show();
+
+                    // Log error details
+                    try {
+                        String errorBody = response.errorBody() != null ? response.errorBody().string() : "No error body";
+                        Log.e(TAG, "Error response: " + errorBody);
+                    } catch (Exception e) {
+                        Log.e(TAG, "Error reading error body: " + e.getMessage());
+                    }
                 }
             }
 
             @Override
             public void onFailure(Call<List<TableModel>> call, Throwable t) {
-                Toast.makeText(TableActivity.this, "Lỗi kết nối: " + t.getMessage(), Toast.LENGTH_LONG).show();
+                Log.e(TAG, "Error updating table status: " + t.getMessage(), t);
+                Toast.makeText(TableActivity.this, "Lỗi kết nối khi cập nhật bàn", Toast.LENGTH_SHORT).show();
             }
         });
+    }
+
+    private void fetchTablesFromApi() {
+        Log.d(TAG, "Fetching tables from API...");
+
+        Call<List<TableModel>> call = apiService.getAllTables();
+
+        call.enqueue(new Callback<List<TableModel>>() {
+            @Override
+            public void onResponse(Call<List<TableModel>> call, Response<List<TableModel>> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    Log.d(TAG, "API Success: Received " + response.body().size() + " tables");
+
+                    tableList.clear();
+                    tableList.addAll(response.body());
+                    adapter.notifyDataSetChanged();
+
+                    // Log table data for debugging
+                    for (TableModel table : response.body()) {
+                        Log.d(TAG, "Table ID: " + table.getTableId() + ", Status: " + table.getStatus());
+                    }
+                } else {
+                    Log.w(TAG, "API Failed: " + response.code() + " - " + response.message());
+                    Toast.makeText(TableActivity.this, "Không tải được dữ liệu bàn", Toast.LENGTH_SHORT).show();
+
+                    // Load sample data as fallback
+                    loadSampleTables();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<List<TableModel>> call, Throwable t) {
+                Log.e(TAG, "API Error: " + t.getMessage(), t);
+                Toast.makeText(TableActivity.this, "Lỗi kết nối: " + t.getMessage(), Toast.LENGTH_LONG).show();
+
+                // Load sample data as fallback
+                loadSampleTables();
+            }
+        });
+    }
+
+    private void loadSampleTables() {
+        Log.d(TAG, "Loading sample tables...");
+
+        tableList.clear();
+
+        // Sample data matching database structure
+        String[] statuses = {"reserved", "reserved", "available", "available", "reserved", "reserved", "available", "reserved"};
+        String[] ids = {"table1", "table2", "table3", "table4", "table5", "table6", "table7", "table8"};
+
+        for (int i = 1; i <= 8; i++) {
+            TableModel table = new TableModel();
+            table.setTableId(i);
+            table.setStatus(statuses[i - 1]);
+            table.setId(ids[i - 1]);
+            tableList.add(table);
+        }
+
+        adapter.notifyDataSetChanged();
+        Toast.makeText(this, "Hiển thị dữ liệu mẫu", Toast.LENGTH_SHORT).show();
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        // Refresh dữ liệu khi quay lại activity
+        // Refresh data when returning to this activity
         fetchTablesFromApi();
+    }
+
+    @Override
+    public void onBackPressed() {
+        // Navigate back to MainActivity instead of closing
+        Intent intent = new Intent(TableActivity.this, MainActivity.class);
+        startActivity(intent);
+        finish();
     }
 }

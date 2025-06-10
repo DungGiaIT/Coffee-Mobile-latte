@@ -39,7 +39,7 @@ public class TableRecyclerAdapter extends RecyclerView.Adapter<TableRecyclerAdap
     @Override
     public void onBindViewHolder(@NonNull TableViewHolder holder, int position) {
         TableModel table = tableList.get(position);
-        holder.bind(table, context);
+        holder.bind(table, context, onTableClickListener);
     }
 
     @Override
@@ -59,33 +59,30 @@ public class TableRecyclerAdapter extends RecyclerView.Adapter<TableRecyclerAdap
             tableStatus = itemView.findViewById(R.id.tableStatus);
         }
 
-        public void bind(TableModel table, Context context) {
+        public void bind(TableModel table, Context context, OnTableClickListener clickListener) {
             if (table == null) return;
 
             tableNumber.setText(String.format("Bàn %d", table.getTableId()));
 
             // Set click listener
             itemView.setOnClickListener(v -> {
-                if (itemView.getTag() instanceof OnTableClickListener) {
-                    OnTableClickListener listener = (OnTableClickListener) itemView.getTag();
-                    listener.onTableClick(table);
+                if (clickListener != null) {
+                    clickListener.onTableClick(table);
                 }
             });
 
-            // Handle status with proper color resources
-            String status = table.getStatus() != null ? table.getStatus().toLowerCase() : "empty";
+            // Handle status based on database values
+            String status = table.getStatus() != null ? table.getStatus().toLowerCase() : "available";
 
             switch (status) {
+                case "reserved":
+                    setTableStatus(context, R.drawable.ic_reserved, "Đã đặt", R.color.status_serving);
+                    break;
+                case "occupied":
                 case "serving":
-                    setTableStatus(context, R.drawable.ic_reserved, "Đang phục vụ", R.color.status_serving);
+                    setTableStatus(context, R.drawable.ic_coffee_clock, "Đang phục vụ", R.color.status_waiting);
                     break;
-                case "paid":
-                    setTableStatus(context, R.drawable.ic_check_done, "Đã thanh toán", R.color.status_paid);
-                    break;
-                case "waiting":
-                    setTableStatus(context, R.drawable.ic_coffee_clock, "Đang chờ", R.color.status_waiting);
-                    break;
-                case "empty":
+                case "available":
                 default:
                     setTableStatus(context, R.drawable.ic_table, "Còn trống", R.color.status_empty);
                     break;
@@ -104,12 +101,6 @@ public class TableRecyclerAdapter extends RecyclerView.Adapter<TableRecyclerAdap
                 tableStatus.setTextColor(ContextCompat.getColor(context, R.color.text_primary));
             }
         }
-    }
-
-    // Method to set click listener
-    public void setOnTableClickListener(OnTableClickListener listener) {
-        this.onTableClickListener = listener;
-        notifyDataSetChanged(); // Refresh to apply listener
     }
 
     // Method to update data
