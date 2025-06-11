@@ -640,6 +640,13 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void processTableDataAsync(List<TableModel> newTableList) {
+        // Kiểm tra ExecutorService trước khi sử dụng
+        if (executorService == null || executorService.isShutdown()) {
+            // Tạo mới ExecutorService nếu đã shutdown
+            executorService = Executors.newFixedThreadPool(3);
+            Log.d(TAG, "ExecutorService was re-initialized");
+        }
+
         // Process data comparison in background
         executorService.execute(() -> {
             try {
@@ -765,6 +772,12 @@ public class MainActivity extends AppCompatActivity {
         super.onResume();
         Log.d(TAG, "Activity resumed - starting auto refresh");
 
+        // Tạo lại ExecutorService nếu đã shutdown
+        if (executorService == null || executorService.isShutdown()) {
+            executorService = Executors.newFixedThreadPool(3);
+            Log.d(TAG, "ExecutorService was re-initialized");
+        }
+
         // Update staff info to reflect current API status
         loadStaffInfoAsync();
 
@@ -789,6 +802,8 @@ public class MainActivity extends AppCompatActivity {
         // Stop auto-refresh to save battery
         refreshHandler.removeCallbacks(refreshRunnable);
         isActiveMode = false; // Reset active mode
+
+        // LOẠI BỎ DÒNG NÀY: executorService.shutdown();
     }
 
     @Override

@@ -160,10 +160,10 @@ public class OrderListActivity extends AppCompatActivity implements OrderAdapter
 
         // Add sample orders matching the structure in screenshot
         orderList.add(new Order("cmbq9wn1n0000lc04r92w06f0", "table1", 13.09, "PENDING", "PICKUP", null));
-        orderList.add(new Order("cmbqmmbzd000jy04tcrpr459", "table2", 5.39, "PENDING", "PICKUP", null));
+        orderList.add(new Order("cmbqmmbzd000jy04tc rpr459", "table2", 5.39, "PENDING", "PICKUP", null));
         orderList.add(new Order("cmbqskpiw0000vctw1mw0dqiy", "table5", 43.67, "PENDING", "PICKUP", null));
         orderList.add(new Order("cmbr5tue00000o9cswu6rvdfz", "table1", 28.501, "PENDING", "PICKUP", null));
-        orderList.add(new Order("cmbr5e6x30002o9csji0mg9h", "NULL", 6.49, "PENDING", "DELIVERY", "2315"));
+        orderList.add(new Order("cmbr5e6x30002o9csji0mg9h", "NULL", 6.49, "PENDING", "DELIVERY", null));
         orderList.add(new Order("cmbr5ql9k0000l404rxg5y1b6", "table1", 21.89, "PENDING", "PICKUP", null));
 
         orderAdapter.notifyDataSetChanged();

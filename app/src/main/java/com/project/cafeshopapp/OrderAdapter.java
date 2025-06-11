@@ -111,19 +111,19 @@ public class OrderAdapter extends RecyclerView.Adapter<OrderAdapter.ViewHolder> 
             // Set delivery method
             setupDeliveryMethod(order.getDeliveryMethod());
 
-            // Show delivery address if applicable
-            if (order.getDeliveryMethod() != null &&
-                    order.getDeliveryMethod().equalsIgnoreCase("DELIVERY") &&
-                    order.getDeliveryAddress() != null) {
-
-                addressLayout.setVisibility(View.VISIBLE);
-                TextView deliveryAddressView = itemView.findViewById(R.id.deliveryAddress);
-                if (deliveryAddressView != null) {
-                    deliveryAddressView.setText(order.getDeliveryAddress());
-                }
-            } else {
-                addressLayout.setVisibility(View.GONE);
-            }
+//            // Show delivery address if applicable
+//            if (order.getDeliveryMethod() != null &&
+//                    order.getDeliveryMethod().equalsIgnoreCase("DELIVERY") &&
+//                    order.getDeliveryAddress() != null) {
+//
+//                addressLayout.setVisibility(View.VISIBLE);
+//                TextView deliveryAddressView = itemView.findViewById(R.id.deliveryAddress);
+//                if (deliveryAddressView != null) {
+//                    deliveryAddressView.setText(order.getDeliveryAddress());
+//                }
+//            } else {
+//                addressLayout.setVisibility(View.GONE);
+//            }
 
             // Setup buttons if listener is available
             if (listener != null) {

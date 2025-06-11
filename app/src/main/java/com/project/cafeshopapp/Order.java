@@ -30,7 +30,7 @@ public class Order {
         this.total = total;
         this.status = status;
         this.deliveryMethod = deliveryMethod;
-        this.deliveryAddress = deliveryAddress;
+        this.deliveryAddress = null;
     }
 
     // Getters and setters

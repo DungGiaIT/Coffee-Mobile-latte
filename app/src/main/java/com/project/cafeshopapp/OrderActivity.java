@@ -149,7 +149,7 @@ public class OrderActivity extends AppCompatActivity implements OrderAdapter.Ord
         orders.add(new Order("cmbqmmbzd000jy04tcrpr459", "table" + tableNumber, 5.39, "PENDING", "PICKUP", null));
 
         if (tableNumber % 3 == 0) {
-            orders.add(new Order("cmbr5e6x30002o9csji0mg9h", "table" + tableNumber, 6.49, "PENDING", "DELIVERY", "2315"));
+            orders.add(new Order("cmbr5e6x30002o9csji0mg9h", "table" + tableNumber, 6.49, "PENDING", "DELIVERY", null));
         }
 
         updateUI();
