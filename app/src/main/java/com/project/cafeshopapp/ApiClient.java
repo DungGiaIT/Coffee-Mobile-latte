@@ -19,6 +19,8 @@ public class ApiClient {
 
     private static Retrofit retrofit;
     private static Cache cache;
+
+    // 🚀 TĂNG TIMEOUT VÀ TỐI ƯU CONNECTION
     private static final long CACHE_SIZE = 10 * 1024 * 1024; // 10 MB cache
     private static final int CACHE_MAX_AGE = 2; // Cache valid for 2 minutes
     private static final int CACHE_MAX_STALE = 7 * 24 * 60; // Cache acceptable when offline for 1 week
@@ -33,8 +35,17 @@ public class ApiClient {
     public static Retrofit getClient() {
         if (retrofit == null) {
             OkHttpClient.Builder builder = new OkHttpClient.Builder()
-                    .connectTimeout(30, TimeUnit.SECONDS)
-                    .readTimeout(30, TimeUnit.SECONDS);
+                    // 🚀 TĂNG TIMEOUT VÀ TỐI ƯU HÓA PERFORMANCE
+                    .connectTimeout(60, TimeUnit.SECONDS)    // Tăng từ 30s lên 60s
+                    .readTimeout(60, TimeUnit.SECONDS)       // Tăng từ 30s lên 60s
+                    .writeTimeout(60, TimeUnit.SECONDS)      // Thêm write timeout
+                    .callTimeout(120, TimeUnit.SECONDS)      // Thêm call timeout tổng
+
+                    // 🔗 TỐI ƯU CONNECTION POOL
+                    .connectionPool(new okhttp3.ConnectionPool(5, 5, TimeUnit.MINUTES))
+
+                    // 🔄 RETRY CONFIGURATION
+                    .retryOnConnectionFailure(true);
 
             // Add cache if initialized
             if (cache != null) {
@@ -71,13 +82,15 @@ public class ApiClient {
                 });
             }
 
-            // 🔧 Add headers and logging interceptor
+            // 🔧 Add headers and logging interceptor với performance logging
             builder.addInterceptor(new Interceptor() {
                 @Override
                 public okhttp3.Response intercept(Chain chain) throws java.io.IOException {
                     Request originalRequest = chain.request();
 
-                    Log.d(TAG, "🔗 Making request to: " + originalRequest.url());
+                    // 📊 PERFORMANCE TRACKING
+                    long startTime = System.currentTimeMillis();
+                    Log.d(TAG, "🔗 Starting request to: " + originalRequest.url());
 
                     // 🔑 THÊM SUPABASE HEADERS
                     Request newRequest = originalRequest.newBuilder()
@@ -86,12 +99,22 @@ public class ApiClient {
                             .addHeader("Accept", "application/json")
                             .addHeader("Content-Type", "application/json")
                             .addHeader("Prefer", "return=representation")
+                            // 🚀 Thêm headers tối ưu performance
+                            .addHeader("User-Agent", "CoffeeShopApp/1.0")
+                            .addHeader("Connection", "keep-alive")
                             .build();
 
-                    Log.d(TAG, "🔑 Added headers: apikey, Authorization, Accept, Content-Type, Prefer");
-
                     okhttp3.Response response = chain.proceed(newRequest);
-                    Log.d(TAG, "📊 Response code: " + response.code());
+
+                    // 📊 LOG PERFORMANCE
+                    long endTime = System.currentTimeMillis();
+                    long duration = endTime - startTime;
+                    Log.d(TAG, "📊 Request completed in " + duration + "ms - Response code: " + response.code());
+
+                    // ⚠️ Warning if request is slow
+                    if (duration > 5000) { // 5 seconds
+                        Log.w(TAG, "🐌 SLOW REQUEST WARNING: " + originalRequest.url() + " took " + duration + "ms");
+                    }
 
                     return response;
                 }
@@ -105,7 +128,7 @@ public class ApiClient {
                     .addConverterFactory(GsonConverterFactory.create())
                     .build();
 
-            Log.d(TAG, "🚀 Retrofit client initialized with Supabase headers" +
+            Log.d(TAG, "🚀 Retrofit client initialized with optimized performance settings" +
                     (cache != null ? " and caching" : ""));
         }
         return retrofit;

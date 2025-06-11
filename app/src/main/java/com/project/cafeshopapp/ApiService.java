@@ -33,7 +33,7 @@ public interface ApiService {
     @POST("manager_table")
     Call<List<TableModel>> createTable(@Body TableModel tableModel);
 
-    // 📦 Order APIs - mới thêm vào
+    // 📦 Order APIs - CẬP NHẬT THEO DATABASE STRUCTURE
     @GET("order")
     Call<List<Order>> getAllOrders();
 
@@ -43,6 +43,13 @@ public interface ApiService {
     @GET("order")
     Call<List<Order>> getOrdersByStatus(@Query("status") String statusFilter);
 
+    // 🔧 THÊM SELECT PARAMETER ĐỂ KIỂM SOÁT DỮ LIỆU TRẢ VỀ
+    @GET("order")
+    Call<List<Order>> getAllOrdersWithSelect(@Query("select") String select);
+
+    @GET("order")
+    Call<List<Order>> getOrdersByTableWithSelect(@Query("tableId") String tableIdFilter, @Query("select") String select);
+
     @PATCH("order")
     Call<List<Order>> updateOrderStatus(@Query("id") String orderId, @Body OrderStatusUpdate statusUpdate);
 
@@ -50,7 +57,10 @@ public interface ApiService {
     @GET("product")
     Call<List<Product>> getProducts();
 
-    // Phương thức cũ - giữ lại để tương thích với code hiện có
-    @GET("order")
-    Call<List<OrderItem>> getOrderItemsByTable(@Query("tableId") String tableIdFilter);
+    // 📋 Order Items API - để lấy chi tiết sản phẩm trong đơn hàng
+    @GET("order_item")
+    Call<List<OrderItem>> getOrderItemsByOrderId(@Query("orderId") String orderIdFilter);
+
+    @GET("order_item")
+    Call<List<OrderItem>> getAllOrderItems();
 }

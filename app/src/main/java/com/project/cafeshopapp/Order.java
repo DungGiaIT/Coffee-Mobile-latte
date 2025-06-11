@@ -21,74 +21,82 @@ public class Order {
     @SerializedName("deliveryAddress")
     private String deliveryAddress;
 
+    @SerializedName("customerName")
+    private String customerName;
+
+    @SerializedName("customerEmail")
+    private String customerEmail;
+
+    @SerializedName("customerPhone")
+    private String customerPhone;
+
+    @SerializedName("note")
+    private String note;
+
+    @SerializedName("createdAt")
+    private String createdAt;
+
     // Constructors
     public Order() {}
 
-    public Order(String id, String tableId, double total, String status, String deliveryMethod, String deliveryAddress) {
+    public Order(String id, String tableId, double total, String status,
+                 String deliveryMethod, String deliveryAddress) {
         this.id = id;
         this.tableId = tableId;
         this.total = total;
         this.status = status;
         this.deliveryMethod = deliveryMethod;
-        this.deliveryAddress = null;
-    }
-
-    // Getters and setters
-    public String getId() {
-        return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
-    }
-
-    public String getTableId() {
-        return tableId;
-    }
-
-    public void setTableId(String tableId) {
-        this.tableId = tableId;
-    }
-
-    public double getTotal() {
-        return total;
-    }
-
-    public void setTotal(double total) {
-        this.total = total;
-    }
-
-    public String getStatus() {
-        return status;
-    }
-
-    public void setStatus(String status) {
-        this.status = status;
-    }
-
-    public String getDeliveryMethod() {
-        return deliveryMethod;
-    }
-
-    public void setDeliveryMethod(String deliveryMethod) {
-        this.deliveryMethod = deliveryMethod;
-    }
-
-    public String getDeliveryAddress() {
-        return deliveryAddress;
-    }
-
-    public void setDeliveryAddress(String deliveryAddress) {
         this.deliveryAddress = deliveryAddress;
     }
 
-    // Utility method to format total as currency
+    // Getters and Setters
+    public String getId() { return id; }
+    public void setId(String id) { this.id = id; }
+
+    public String getTableId() { return tableId; }
+    public void setTableId(String tableId) { this.tableId = tableId; }
+
+    public double getTotal() { return total; }
+    public void setTotal(double total) { this.total = total; }
+
+    public String getStatus() { return status; }
+    public void setStatus(String status) { this.status = status; }
+
+    public String getDeliveryMethod() { return deliveryMethod; }
+    public void setDeliveryMethod(String deliveryMethod) { this.deliveryMethod = deliveryMethod; }
+
+    public String getDeliveryAddress() { return deliveryAddress; }
+    public void setDeliveryAddress(String deliveryAddress) { this.deliveryAddress = deliveryAddress; }
+
+    public String getCustomerName() { return customerName; }
+    public void setCustomerName(String customerName) { this.customerName = customerName; }
+
+    public String getCustomerEmail() { return customerEmail; }
+    public void setCustomerEmail(String customerEmail) { this.customerEmail = customerEmail; }
+
+    public String getCustomerPhone() { return customerPhone; }
+    public void setCustomerPhone(String customerPhone) { this.customerPhone = customerPhone; }
+
+    public String getNote() { return note; }
+    public void setNote(String note) { this.note = note; }
+
+    public String getCreatedAt() { return createdAt; }
+    public void setCreatedAt(String createdAt) { this.createdAt = createdAt; }
+
+    // Helper method to get formatted total
     public String getFormattedTotal() {
-        return String.format("%,.0fđ", total * 1000); // Assuming your prices are stored in thousands
+        return String.format("%.2f€", total);
     }
 
-    // For validation
-    public boolean isValid() {
-        return id != null && !id.isEmpty() && status != null;
+    // Helper method to get table display text
+    public int getTableNumber() {
+        if (tableId != null && tableId.startsWith("table")) {
+            try {
+                return Integer.parseInt(tableId.substring(5));
+            } catch (NumberFormatException e) {
+                return 0;
+            }
+        }
+        return 0;
     }
 }

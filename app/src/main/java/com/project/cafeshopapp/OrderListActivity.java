@@ -88,22 +88,39 @@ public class OrderListActivity extends AppCompatActivity implements OrderAdapter
     }
 
     private void fetchOrders() {
+        Log.d(TAG, "🔄 Fetching orders from API...");
         swipeRefreshLayout.setRefreshing(true);
 
-        Call<List<Order>> call = apiService.getAllOrders();
+        // 🛠️ THỬ VỚI SELECT PARAMETER ĐỂ GIẢM DỮ LIỆU TẢI VỀ
+        String selectFields = "id,tableId,total,status,deliveryMethod,deliveryAddress,customerName,customerPhone,note,createdAt";
+        Call<List<Order>> call = apiService.getAllOrdersWithSelect(selectFields);
+
         call.enqueue(new Callback<List<Order>>() {
             @Override
             public void onResponse(Call<List<Order>> call, Response<List<Order>> response) {
                 swipeRefreshLayout.setRefreshing(false);
 
+                Log.d(TAG, "📊 API Response Code: " + response.code());
+
                 if (response.isSuccessful() && response.body() != null) {
-                    Log.d(TAG, "Fetched " + response.body().size() + " orders");
+                    Log.d(TAG, "✅ Fetched " + response.body().size() + " orders successfully");
 
                     // Process on background thread
                     processOrders(response.body());
                 } else {
-                    // API call failed
-                    Log.e(TAG, "Failed to fetch orders: " + response.code());
+                    // 🔍 LOG CHI TIẾT LỖI
+                    String errorMessage = "Unknown error";
+                    try {
+                        if (response.errorBody() != null) {
+                            errorMessage = response.errorBody().string();
+                        }
+                    } catch (Exception e) {
+                        Log.e(TAG, "Error reading error body: " + e.getMessage());
+                    }
+
+                    Log.e(TAG, "❌ API Failed: " + response.code() + " - " + response.message());
+                    Log.e(TAG, "❌ Error Body: " + errorMessage);
+
                     handleApiError("Không thể tải đơn hàng (Lỗi: " + response.code() + ")");
                 }
             }
@@ -111,8 +128,37 @@ public class OrderListActivity extends AppCompatActivity implements OrderAdapter
             @Override
             public void onFailure(Call<List<Order>> call, Throwable t) {
                 swipeRefreshLayout.setRefreshing(false);
-                Log.e(TAG, "Error fetching orders: " + t.getMessage(), t);
+                Log.e(TAG, "🌐 Network Error: " + t.getMessage(), t);
                 handleApiError("Lỗi kết nối: " + t.getMessage());
+            }
+        });
+
+        // 🔄 FALLBACK: THỬ VỚI API CALL ĐƠN GIẢN HƠN NÊU CÓ LỖI
+        if (!swipeRefreshLayout.isRefreshing()) {
+            trySimpleFetch();
+        }
+    }
+
+    private void trySimpleFetch() {
+        Log.d(TAG, "🔄 Trying simple fetch as fallback...");
+
+        Call<List<Order>> simplCall = apiService.getAllOrders();
+        simplCall.enqueue(new Callback<List<Order>>() {
+            @Override
+            public void onResponse(Call<List<Order>> call, Response<List<Order>> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    Log.d(TAG, "✅ Simple fetch successful: " + response.body().size() + " orders");
+                    processOrders(response.body());
+                } else {
+                    Log.e(TAG, "❌ Simple fetch also failed: " + response.code());
+                    handleApiError("API không thể truy cập. Hiển thị dữ liệu mẫu.");
+                }
+            }
+
+            @Override
+            public void onFailure(Call<List<Order>> call, Throwable t) {
+                Log.e(TAG, "❌ Simple fetch network error: " + t.getMessage());
+                handleApiError("Lỗi kết nối. Hiển thị dữ liệu mẫu.");
             }
         });
     }
@@ -120,7 +166,14 @@ public class OrderListActivity extends AppCompatActivity implements OrderAdapter
     private void processOrders(List<Order> orders) {
         executorService.execute(() -> {
             try {
-                // Process data in background if needed
+                // Log sample data for debugging
+                if (!orders.isEmpty()) {
+                    Order firstOrder = orders.get(0);
+                    Log.d(TAG, "📋 Sample order: " + firstOrder.getId() +
+                            " - Table: " + firstOrder.getTableId() +
+                            " - Total: " + firstOrder.getTotal() +
+                            " - Status: " + firstOrder.getStatus());
+                }
 
                 // Update UI on main thread
                 mainHandler.post(() -> {
@@ -129,6 +182,10 @@ public class OrderListActivity extends AppCompatActivity implements OrderAdapter
                     orderAdapter.notifyDataSetChanged();
 
                     updateEmptyViewVisibility();
+
+                    Toast.makeText(OrderListActivity.this,
+                            "✅ Tải " + orders.size() + " đơn hàng thành công",
+                            Toast.LENGTH_SHORT).show();
                 });
             } catch (Exception e) {
                 Log.e(TAG, "Error processing orders: " + e.getMessage(), e);
@@ -140,7 +197,7 @@ public class OrderListActivity extends AppCompatActivity implements OrderAdapter
     }
 
     private void handleApiError(String message) {
-        Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, message, Toast.LENGTH_LONG).show();
         loadSampleData();
     }
 
@@ -155,27 +212,43 @@ public class OrderListActivity extends AppCompatActivity implements OrderAdapter
     }
 
     private void loadSampleData() {
+        Log.d(TAG, "📋 Loading sample data based on database structure...");
+
         // Create sample orders based on the database table in the screenshot
         orderList.clear();
 
-        // Add sample orders matching the structure in screenshot
-        orderList.add(new Order("cmbq9wn1n0000lc04r92w06f0", "table1", 13.09, "PENDING", "PICKUP", null));
-        orderList.add(new Order("cmbqmmbzd000jy04tc rpr459", "table2", 5.39, "PENDING", "PICKUP", null));
-        orderList.add(new Order("cmbqskpiw0000vctw1mw0dqiy", "table5", 43.67, "PENDING", "PICKUP", null));
-        orderList.add(new Order("cmbr5tue00000o9cswu6rvdfz", "table1", 28.501, "PENDING", "PICKUP", null));
-        orderList.add(new Order("cmbr5e6x30002o9csji0mg9h", "NULL", 6.49, "PENDING", "DELIVERY", null));
-        orderList.add(new Order("cmbr5ql9k0000l404rxg5y1b6", "table1", 21.89, "PENDING", "PICKUP", null));
+        // Add sample orders matching the structure in screenshot - với đúng cấu trúc database
+        orderList.add(createSampleOrder("cmbq9wn1n0000lc04r92w06f0", "table1", 13.09, "PENDING", "PICKUP", "Khanh Le"));
+        orderList.add(createSampleOrder("cmbqmmbzd000jy04tcrpr459", "table2", 5.39, "PENDING", "PICKUP", "Khanh Le"));
+        orderList.add(createSampleOrder("cmbqskpiw0000vctw1mw0dqiy", "table5", 43.67, "PENDING", "PICKUP", "Lê Bảo Khanh"));
+        orderList.add(createSampleOrder("cmbr5tue00000o9cswu6rvdfz", "table1", 28.501, "PENDING", "PICKUP", "Nguyen Tien Dung"));
+        orderList.add(createSampleOrder("cmbr5e6x30002o9csji0mg9h", null, 6.49, "PENDING", "DELIVERY", "Nguyen Tien Dung"));
+        orderList.add(createSampleOrder("cmbr5ql9k0000l404rxg5y1b6", "table1", 21.89, "PENDING", "PICKUP", "du"));
 
         orderAdapter.notifyDataSetChanged();
-        Toast.makeText(this, "Hiển thị dữ liệu mẫu", Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, "📋 Hiển thị dữ liệu mẫu (6 đơn hàng)", Toast.LENGTH_SHORT).show();
 
         updateEmptyViewVisibility();
+    }
+
+    private Order createSampleOrder(String id, String tableId, double total, String status, String deliveryMethod, String customerName) {
+        Order order = new Order();
+        order.setId(id);
+        order.setTableId(tableId);
+        order.setTotal(total);
+        order.setStatus(status);
+        order.setDeliveryMethod(deliveryMethod);
+        order.setCustomerName(customerName);
+        order.setCreatedAt("2025-06-11");
+        return order;
     }
 
     @Override
     public void onViewDetailsClick(Order order) {
         // Navigate to order details screen
-        Toast.makeText(this, "Chi tiết đơn hàng " + order.getId(), Toast.LENGTH_SHORT).show();
+        String customerInfo = order.getCustomerName() != null ?
+                "Khách: " + order.getCustomerName() : "Khách: Không có thông tin";
+        Toast.makeText(this, "Chi tiết đơn hàng " + order.getId() + "\n" + customerInfo, Toast.LENGTH_LONG).show();
         // TODO: Create OrderDetailsActivity and start it here
     }
 
@@ -189,7 +262,8 @@ public class OrderListActivity extends AppCompatActivity implements OrderAdapter
         String[] statuses = {"PENDING", "PROCESSING", "COMPLETED", "CANCELLED"};
 
         new MaterialAlertDialogBuilder(this)
-                .setTitle("Cập nhật trạng thái")
+                .setTitle("Cập nhật trạng thái đơn hàng")
+                .setMessage("Đơn hàng: " + order.getId())
                 .setItems(statuses, (dialog, which) -> {
                     updateOrderStatus(order.getId(), statuses[which]);
                 })
@@ -206,7 +280,7 @@ public class OrderListActivity extends AppCompatActivity implements OrderAdapter
                 if (response.isSuccessful() && response.body() != null && !response.body().isEmpty()) {
                     // Update successful
                     Toast.makeText(OrderListActivity.this,
-                            "Cập nhật trạng thái thành " + newStatus,
+                            "✅ Cập nhật trạng thái thành " + newStatus,
                             Toast.LENGTH_SHORT).show();
 
                     // Refresh data
@@ -214,7 +288,7 @@ public class OrderListActivity extends AppCompatActivity implements OrderAdapter
                 } else {
                     Log.e(TAG, "Failed to update order status. Response code: " + response.code());
                     Toast.makeText(OrderListActivity.this,
-                            "Không thể cập nhật trạng thái (Lỗi: " + response.code() + ")",
+                            "❌ Không thể cập nhật trạng thái (Lỗi: " + response.code() + ")",
                             Toast.LENGTH_SHORT).show();
                 }
             }
@@ -223,7 +297,7 @@ public class OrderListActivity extends AppCompatActivity implements OrderAdapter
             public void onFailure(Call<List<Order>> call, Throwable t) {
                 Log.e(TAG, "Error updating order status: " + t.getMessage(), t);
                 Toast.makeText(OrderListActivity.this,
-                        "Lỗi kết nối khi cập nhật trạng thái",
+                        "❌ Lỗi kết nối khi cập nhật trạng thái",
                         Toast.LENGTH_SHORT).show();
             }
         });
