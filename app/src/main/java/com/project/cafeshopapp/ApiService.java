@@ -11,8 +11,8 @@ import retrofit2.http.Query;
 
 public interface ApiService {
 
-    // 🏠 ManagerTable APIs - Updated table name to match Supabase
-    @GET("manager_table")  // Matches the actual table name in Supabase
+    // 🏠 ManagerTable APIs
+    @GET("manager_table")
     Call<List<TableModel>> getAllTables();
 
     @GET("manager_table")
@@ -33,11 +33,24 @@ public interface ApiService {
     @POST("manager_table")
     Call<List<TableModel>> createTable(@Body TableModel tableModel);
 
+    // 📦 Order APIs - mới thêm vào
+    @GET("order")
+    Call<List<Order>> getAllOrders();
+
+    @GET("order")
+    Call<List<Order>> getOrdersByTable(@Query("tableId") String tableIdFilter);
+
+    @GET("order")
+    Call<List<Order>> getOrdersByStatus(@Query("status") String statusFilter);
+
+    @PATCH("order")
+    Call<List<Order>> updateOrderStatus(@Query("id") String orderId, @Body OrderStatusUpdate statusUpdate);
+
     // 🛒 Product APIs (if needed)
     @GET("product")
     Call<List<Product>> getProducts();
 
-    // 📝 Order APIs (if needed)
+    // Phương thức cũ - giữ lại để tương thích với code hiện có
     @GET("order")
-    Call<List<OrderItem>> getOrdersByTable(@Query("tableId") String tableIdFilter);
+    Call<List<OrderItem>> getOrderItemsByTable(@Query("tableId") String tableIdFilter);
 }

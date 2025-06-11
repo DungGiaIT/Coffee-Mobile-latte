@@ -35,4 +35,16 @@
     <color name="transparent">#00000000</color>
     <color name="success_green">#4CAF50</color>
     <color name="error_red">#F44336</color>
+
+    <!-- Order Status Colors -->
+    <color name="status_pending">#FF9800</color>
+    <color name="status_processing">#2196F3</color>
+    <color name="status_completed">#4CAF50</color>
+    <color name="status_cancelled">#F44336</color>
+
+    <!-- Delivery Method Colors -->
+    <color name="pickup_color">#FF9800</color>
+    <color name="delivery_color">#4CAF50</color>
+
+
 </resources>
