@@ -42,8 +42,8 @@ import retrofit2.Response;
 
 public class MainActivity extends AppCompatActivity {
     private static final String TAG = "MainActivity";
-    private static final int REFRESH_INTERVAL = 30000; // 30 seconds auto-refresh
-    private static final int FAST_REFRESH_INTERVAL = 10000; // 10 seconds for active mode
+    private static final int REFRESH_INTERVAL = 15000; // Giảm từ 30s xuống 15s
+    private static final int FAST_REFRESH_INTERVAL = 5000;  // 10 seconds for active mode
 
     // API Configuration
     private static final String API_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVmZ3hzaWNxbGFyYXFhZXppb2hmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDg3MTk0ODIsImV4cCI6MjA2NDI5NTQ4Mn0.scTWf1VRknpvZ4WcDzswtWRPa9EmuJOpcsy86emIUP4";
@@ -100,6 +100,8 @@ public class MainActivity extends AppCompatActivity {
 
         // Test API connection first, then fetch data
         testApiConnectionAndFetchData();
+        NetworkDebugUtils.logNetworkInfo(this);
+        NetworkDebugUtils.testDNSResolution();
     }
 
     private void initBackgroundThreading() {
@@ -163,26 +165,19 @@ public class MainActivity extends AppCompatActivity {
     private void testApiConnection() {
         executorService.execute(() -> {
             try {
-                Log.d(TAG, "🔗 Creating HTTP client for API test...");
-
-                // 🔍 DEBUG: KIỂM TRA KEY TYPE
-                Log.d(TAG, "🔑 API Key first 50 chars: " + API_KEY.substring(0, Math.min(50, API_KEY.length())));
-
-                // Decode JWT payload để xem role
-                try {
-                    String[] parts = API_KEY.split("\\.");
-                    if (parts.length > 1) {
-                        byte[] decodedBytes = android.util.Base64.decode(parts[1], android.util.Base64.URL_SAFE);
-                        String payload = new String(decodedBytes);
-                        Log.d(TAG, "🎫 JWT Payload: " + payload);
-                    }
-                } catch (Exception e) {
-                    Log.e(TAG, "Error decoding JWT: " + e.getMessage());
-                }
+                Log.d(TAG, "🔗 Creating optimized HTTP client for API test...");
 
                 OkHttpClient client = new OkHttpClient.Builder()
-                        .connectTimeout(10, java.util.concurrent.TimeUnit.SECONDS)
-                        .readTimeout(10, java.util.concurrent.TimeUnit.SECONDS)
+                        // 🚀 TĂNG TIMEOUT CHO TEST CONNECTION
+                        .connectTimeout(30, java.util.concurrent.TimeUnit.SECONDS) // Tăng lên 30s
+                        .readTimeout(30, java.util.concurrent.TimeUnit.SECONDS)    // Tăng lên 30s
+                        .writeTimeout(30, java.util.concurrent.TimeUnit.SECONDS)   // Thêm write timeout
+
+                        // 🔄 RETRY CONFIGURATION
+                        .retryOnConnectionFailure(true)
+
+                        // 🔗 DNS TỐI ƯU
+                        .dns(okhttp3.Dns.SYSTEM)
                         .build();
 
                 Request request = new Request.Builder()
@@ -191,19 +186,27 @@ public class MainActivity extends AppCompatActivity {
                         .addHeader("Authorization", "Bearer " + API_KEY)
                         .addHeader("Accept", "application/json")
                         .addHeader("Content-Type", "application/json")
+                        // 🚀 Thêm headers performance
+                        .addHeader("User-Agent", "CoffeeShopApp/1.0")
+                        .addHeader("Connection", "keep-alive")
                         .build();
 
-                Log.d(TAG, "📡 Sending API test request to: " + request.url());
-                Log.d(TAG, "🔑 Using API key: " + API_KEY.substring(0, 20) + "...");
+                Log.d(TAG, "📡 Sending optimized API test request to: " + request.url());
+
+                // 📊 TRACK PERFORMANCE
+                long startTime = System.currentTimeMillis();
 
                 client.newCall(request).enqueue(new okhttp3.Callback() {
                     @Override
                     public void onResponse(okhttp3.Call call, okhttp3.Response response) {
+                        long duration = System.currentTimeMillis() - startTime;
+                        Log.d(TAG, "🚀 API test completed in " + duration + "ms");
                         handleApiTestResponse(response);
                     }
-
                     @Override
                     public void onFailure(okhttp3.Call call, IOException e) {
+                        long duration = System.currentTimeMillis() - startTime;
+                        Log.e(TAG, "❌ API test failed after " + duration + "ms: " + e.getMessage());
                         handleApiTestFailure(e);
                     }
                 });
