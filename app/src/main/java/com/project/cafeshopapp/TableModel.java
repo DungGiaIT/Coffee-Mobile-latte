@@ -66,4 +66,14 @@ public class TableModel {
     public void setUpdatedAt(String updatedAt) {
         this.updatedAt = updatedAt;
     }
+
+    // Validation method to ensure tableId and status are never null
+    public boolean isValid() {
+        return status != null && !status.isEmpty();
+    }
+
+    // Get a default status if the current one is invalid
+    public String getStatusSafe() {
+        return status != null && !status.isEmpty() ? status : "available";
+    }
 }

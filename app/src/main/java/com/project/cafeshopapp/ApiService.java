@@ -11,35 +11,33 @@ import retrofit2.http.Query;
 
 public interface ApiService {
 
-    // 🏠 ManagerTable APIs
-    @GET("ManagerTable")
+    // 🏠 ManagerTable APIs - Updated table name to match Supabase
+    @GET("manager_table")  // Matches the actual table name in Supabase
     Call<List<TableModel>> getAllTables();
 
-    @GET("ManagerTable")
+    @GET("manager_table")
     Call<List<TableModel>> getAllTablesWithSelect(@Query("select") String select);
 
-    @GET("ManagerTable")
+    @GET("manager_table")
     Call<List<TableModel>> getTableById(@Query("tableId") String tableIdFilter);
 
-    @GET("ManagerTable")
+    @GET("manager_table")
     Call<List<TableModel>> getTablesByStatus(@Query("status") String statusFilter);
 
-    @PATCH("ManagerTable")
+    @PATCH("manager_table")
     Call<List<TableModel>> updateTableStatusById(@Query("tableId") String tableIdFilter, @Body TableUpdateRequest updateRequest);
 
-    @PATCH("ManagerTable")
+    @PATCH("manager_table")
     Call<List<TableModel>> updateTableStatusByRecordId(@Query("id") String idFilter, @Body TableUpdateRequest updateRequest);
 
-    @POST("ManagerTable")
+    @POST("manager_table")
     Call<List<TableModel>> createTable(@Body TableModel tableModel);
 
     // 🛒 Product APIs (if needed)
-    @GET("Product")
+    @GET("product")
     Call<List<Product>> getProducts();
 
     // 📝 Order APIs (if needed)
-    @GET("Order")
+    @GET("order")
     Call<List<OrderItem>> getOrdersByTable(@Query("tableId") String tableIdFilter);
-
-    // 🗑️ REMOVED: getStaffByCode - không cần vì không dùng Staff table
 }
