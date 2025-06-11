@@ -25,7 +25,7 @@ public class OrderAdapter extends RecyclerView.Adapter<OrderAdapter.ViewHolder> 
     public void onBindViewHolder(ViewHolder holder, int position) {
         OrderItem item = items.get(position);
         holder.name.setText(item.name);
-        holder.note.setText("Ghi chú: " + item.note);
+//        holder.note.setText("Ghi chú: " + item.note);
         holder.quantity.setText("Số lượng: " + item.quantity);
     }
 

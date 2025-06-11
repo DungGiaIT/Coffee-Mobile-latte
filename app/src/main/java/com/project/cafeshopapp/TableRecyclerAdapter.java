@@ -1,6 +1,7 @@
 package com.project.cafeshopapp;
 
 import android.content.Context;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -62,6 +63,11 @@ public class TableRecyclerAdapter extends RecyclerView.Adapter<TableRecyclerAdap
         public void bind(TableModel table, Context context, OnTableClickListener clickListener) {
             if (table == null) return;
 
+            // Validate the table data
+            if (!table.isValid()) {
+                Log.w("TableAdapter", "Invalid table data detected for tableId: " + table.getTableId());
+            }
+
             tableNumber.setText(String.format("Bàn %d", table.getTableId()));
 
             // Set click listener
@@ -71,8 +77,8 @@ public class TableRecyclerAdapter extends RecyclerView.Adapter<TableRecyclerAdap
                 }
             });
 
-            // Handle status based on database values
-            String status = table.getStatus() != null ? table.getStatus().toLowerCase() : "available";
+            // Handle status based on database values - use getStatusSafe to avoid null
+            String status = table.getStatusSafe().toLowerCase();
 
             switch (status) {
                 case "reserved":

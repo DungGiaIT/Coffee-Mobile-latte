@@ -24,6 +24,7 @@ import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
+import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -85,6 +86,7 @@ public class MainActivity extends AppCompatActivity {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
+        ApiClient.initCache(new File(getCacheDir(), "api-cache"));
 
         initBackgroundThreading();
         initViews();
@@ -184,7 +186,7 @@ public class MainActivity extends AppCompatActivity {
                         .build();
 
                 Request request = new Request.Builder()
-                        .url(BASE_URL + "ManagerTable?limit=1")
+                        .url(BASE_URL + "manager_table?limit=1")
                         .addHeader("apikey", API_KEY)
                         .addHeader("Authorization", "Bearer " + API_KEY)
                         .addHeader("Accept", "application/json")
@@ -444,9 +446,17 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public void onResponse(Call<List<TableModel>> call, Response<List<TableModel>> response) {
                         mainHandler.post(() -> {
-                            if (response.isSuccessful()) {
-                                Log.d(TAG, "Table " + tableId + " status updated to " + newStatus);
-                                Toast.makeText(MainActivity.this, "✅ Bàn " + tableId + " đã cập nhật thành " + newStatus, Toast.LENGTH_SHORT).show();
+                            if (response.isSuccessful() && response.body() != null && !response.body().isEmpty()) {
+                                TableModel updatedTable = response.body().get(0);
+
+                                // Consistency check: verify that returned status matches what we expected
+                                if (!newStatus.equals(updatedTable.getStatus())) {
+                                    Log.w(TAG, "Status mismatch: Expected " + newStatus + ", got " + updatedTable.getStatus());
+                                    // Consider handling the mismatch - maybe retry or notify user
+                                }
+
+                                Log.d(TAG, "Table " + tableId + " status updated to " + updatedTable.getStatus());
+                                Toast.makeText(MainActivity.this, "✅ Bàn " + tableId + " đã cập nhật thành " + updatedTable.getStatus(), Toast.LENGTH_SHORT).show();
 
                                 // Immediate refresh after update
                                 fetchTablesFromApi();
