@@ -500,8 +500,9 @@ public class MainActivity extends AppCompatActivity {
                 staffInfoLayout.setVisibility(View.GONE);
                 return true;
             } else if (itemId == R.id.nav_order) {
-                Toast.makeText(this, "📋 Xem tất cả đơn hàng", Toast.LENGTH_SHORT).show();
-                // TODO: Navigate to OrderListActivity
+                // Mở OrderListActivity thay vì hiển thị thông báo
+                Intent intent = new Intent(MainActivity.this, OrderListActivity.class);
+                startActivity(intent);
                 return true;
             } else if (itemId == R.id.nav_notify) {
                 Toast.makeText(this, "🔔 Thông báo", Toast.LENGTH_SHORT).show();

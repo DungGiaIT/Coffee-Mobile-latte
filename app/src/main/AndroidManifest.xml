@@ -17,7 +17,8 @@
         <!-- Đặt LoginActivity làm activity mặc định -->
         <activity
             android:name=".LoginActivity"
-            android:exported="true">
+            android:exported="true"
+            >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -28,6 +29,10 @@
         <activity android:name=".TableActivity" />
         <activity android:name=".OrderActivity" />
         <activity android:name=".MainActivity" />
+        <!-- Thêm OrderListActivity -->
+        <activity
+            android:name=".OrderListActivity"
+            android:label="Danh sách đơn hàng" />
 
     </application>
 
