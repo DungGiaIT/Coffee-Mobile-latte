@@ -1,5 +1,6 @@
 package com.project.cafeshopapp;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -10,18 +11,16 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-
-import com.google.android.material.button.MaterialButton;
-import com.google.android.material.dialog.MaterialAlertDialogBuilder;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+import com.google.android.material.button.MaterialButton;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
 public class OrderActivity extends AppCompatActivity implements OrderAdapter.OrderClickListener {
     private static final String TAG = "OrderActivity";
@@ -69,9 +68,13 @@ public class OrderActivity extends AppCompatActivity implements OrderAdapter.Ord
 
         apiService = ApiClient.getClient().create(ApiService.class);
 
-        // Display table info with status
-        String statusText = tableStatus != null ? " (" + tableStatus + ")" : "";
-        tableLabel.setText("Bàn " + tableNumber + " - Đơn hàng" + statusText);
+        // Format the status text with proper capitalization and styling
+        String statusText = "";
+        if (tableStatus != null) {
+            String formattedStatus = tableStatus.substring(0, 1).toUpperCase() + tableStatus.substring(1).toLowerCase();
+            statusText = " (" + formattedStatus + ")";
+        }
+        tableLabel.setText("Table " + tableNumber + " - Orders" + statusText);
 
         confirmBtn.setOnClickListener(v -> {
             handleOrderCompletion();
@@ -80,13 +83,13 @@ public class OrderActivity extends AppCompatActivity implements OrderAdapter.Ord
 
     private void handleOrderCompletion() {
         new MaterialAlertDialogBuilder(this)
-                .setTitle("Xác nhận")
-                .setMessage("Đánh dấu đơn hàng đã hoàn thành?")
-                .setPositiveButton("Xác nhận", (dialog, which) -> {
+                .setTitle("Confirm")
+                .setMessage("Mark order as completed?")
+                .setPositiveButton("Confirm", (dialog, which) -> {
                     // Update all orders for this table to COMPLETED
                     updateAllOrdersStatus("COMPLETED");
                 })
-                .setNegativeButton("Hủy", null)
+                .setNegativeButton("Cancel", null)
                 .show();
     }
 
@@ -122,7 +125,8 @@ public class OrderActivity extends AppCompatActivity implements OrderAdapter.Ord
             public void onFailure(Call<List<Order>> call, Throwable t) {
                 Log.e(TAG, "API Error: " + t.getMessage(), t);
                 loadSampleData();
-                Toast.makeText(OrderActivity.this, "Không thể tải đơn hàng, hiển thị dữ liệu mẫu", Toast.LENGTH_SHORT).show();
+                Toast.makeText(OrderActivity.this, "Cannot load orders, showing sample data", Toast.LENGTH_SHORT)
+                        .show();
             }
         });
     }
@@ -131,11 +135,27 @@ public class OrderActivity extends AppCompatActivity implements OrderAdapter.Ord
         if (orders.isEmpty()) {
             emptyOrderText.setVisibility(View.VISIBLE);
             orderList.setVisibility(View.GONE);
-            emptyOrderText.setText("Bàn " + tableNumber + " chưa có đơn hàng nào");
+            emptyOrderText.setText("Table " + tableNumber + " has no orders yet");
+
+            // Update table status to "available" if there are no orders
+            if (!"available".equalsIgnoreCase(tableStatus)) {
+                tableStatus = "available";
+                String formattedStatus = "Available";
+                String statusText = " (" + formattedStatus + ")";
+                tableLabel.setText("Table " + tableNumber + " - Orders" + statusText);
+            }
         } else {
             emptyOrderText.setVisibility(View.GONE);
             orderList.setVisibility(View.VISIBLE);
             orderAdapter.notifyDataSetChanged();
+
+            // Update table status to "reserved" if there are orders
+            if (!"reserved".equalsIgnoreCase(tableStatus)) {
+                tableStatus = "reserved";
+                String formattedStatus = "Reserved";
+                String statusText = " (" + formattedStatus + ")";
+                tableLabel.setText("Table " + tableNumber + " - Orders" + statusText);
+            }
         }
     }
 
@@ -144,26 +164,27 @@ public class OrderActivity extends AppCompatActivity implements OrderAdapter.Ord
 
         orders.clear();
 
-        // Sample data based on the screenshot
-        orders.add(new Order("cmbq9wn1n0000lc04r92w06f0", "table" + tableNumber, 13.09, "PENDING", "PICKUP", null));
-        orders.add(new Order("cmbqmmbzd000jy04tcrpr459", "table" + tableNumber, 5.39, "PENDING", "PICKUP", null));
-
-        if (tableNumber % 3 == 0) {
-            orders.add(new Order("cmbr5e6x30002o9csji0mg9h", "table" + tableNumber, 6.49, "PENDING", "DELIVERY", null));
+        // Only add sample orders for tables that should have orders (based on our data
+        // model)
+        // Tables 3, 4, 7, and 8 should be available (have no orders)
+        if (tableNumber != 3 && tableNumber != 4 && tableNumber != 7 && tableNumber != 8) {
+            // Sample data based on the screenshot
+            orders.add(new Order("cmbq9wn1n0000lc04r92w06f0", "table" + tableNumber, 13.09, "PENDING", "PICKUP", null));
+            orders.add(new Order("cmbqmmbzd000jy04tcrpr459", "table" + tableNumber, 5.39, "PENDING", "PICKUP", null));
         }
 
         updateUI();
-        Toast.makeText(this, "Hiển thị dữ liệu mẫu cho bàn " + tableNumber, Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, "Showing sample data for table " + tableNumber, Toast.LENGTH_SHORT).show();
     }
 
     private void updateAllOrdersStatus(String newStatus) {
         if (orders.isEmpty()) {
-            Toast.makeText(this, "Không có đơn hàng nào để cập nhật", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "No orders to update", Toast.LENGTH_SHORT).show();
             return;
         }
 
         // Count for tracking completion
-        final int[] completedCount = {0};
+        final int[] completedCount = { 0 };
         final int totalOrders = orders.size();
 
         for (Order order : orders) {
@@ -178,8 +199,13 @@ public class OrderActivity extends AppCompatActivity implements OrderAdapter.Ord
 
                         if (completedCount[0] >= totalOrders) {
                             // All updates completed
+                            // Set table status to available since all orders completed
+                            updateTableToAvailable();
+
                             mainHandler.post(() -> {
-                                Toast.makeText(OrderActivity.this, "Đơn bàn " + tableNumber + " đã hoàn thành", Toast.LENGTH_SHORT).show();
+                                Toast.makeText(OrderActivity.this,
+                                        "Order for table " + tableNumber + " has been completed",
+                                        Toast.LENGTH_SHORT).show();
                                 finish();
                             });
                         }
@@ -194,7 +220,8 @@ public class OrderActivity extends AppCompatActivity implements OrderAdapter.Ord
                         if (completedCount[0] >= totalOrders) {
                             // All updates completed but with errors
                             mainHandler.post(() -> {
-                                Toast.makeText(OrderActivity.this, "Xảy ra lỗi khi cập nhật đơn hàng", Toast.LENGTH_SHORT).show();
+                                Toast.makeText(OrderActivity.this, "An error occurred while updating orders",
+                                        Toast.LENGTH_SHORT).show();
                                 finish();
                             });
                         }
@@ -204,18 +231,44 @@ public class OrderActivity extends AppCompatActivity implements OrderAdapter.Ord
         }
     }
 
+    /**
+     * Updates the table status to available after all orders are completed
+     */
+    private void updateTableToAvailable() {
+        // Update table status to available
+        TableUpdateRequest updateRequest = new TableUpdateRequest("available");
+
+        Call<List<TableModel>> call = apiService.updateTableStatusById("eq." + tableNumber, updateRequest);
+        call.enqueue(new Callback<List<TableModel>>() {
+            @Override
+            public void onResponse(Call<List<TableModel>> call, Response<List<TableModel>> response) {
+                if (response.isSuccessful()) {
+                    Log.d(TAG, "Table " + tableNumber + " status updated to available after order completion");
+                } else {
+                    Log.e(TAG, "Failed to update table status. Response code: " + response.code());
+                }
+            }
+
+            @Override
+            public void onFailure(Call<List<TableModel>> call, Throwable t) {
+                Log.e(TAG, "Error updating table status: " + t.getMessage());
+            }
+        });
+    }
+
     @Override
     public void onViewDetailsClick(Order order) {
-        Toast.makeText(this, "Chi tiết đơn hàng " + order.getId(), Toast.LENGTH_SHORT).show();
-        // TODO: Navigate to order details screen
+        Toast.makeText(this, "Opening order details " + order.getId(), Toast.LENGTH_SHORT).show();
+        Intent intent = new Intent(this, OrderDetailActivity.class);
+        intent.putExtra("orderId", order.getId());
+        startActivity(intent);
     }
 
     @Override
     public void onUpdateStatusClick(Order order) {
-        String[] statuses = {"PENDING", "PROCESSING", "COMPLETED", "CANCELLED"};
-
+        String[] statuses = { "PENDING", "PROCESSING", "COMPLETED", "CANCELLED" };
         new MaterialAlertDialogBuilder(this)
-                .setTitle("Cập nhật trạng thái")
+                .setTitle("Update Status")
                 .setItems(statuses, (dialog, which) -> {
                     updateOrderStatus(order, statuses[which]);
                 })
@@ -231,14 +284,14 @@ public class OrderActivity extends AppCompatActivity implements OrderAdapter.Ord
             public void onResponse(Call<List<Order>> call, Response<List<Order>> response) {
                 if (response.isSuccessful()) {
                     Toast.makeText(OrderActivity.this,
-                            "Cập nhật thành công: " + newStatus,
+                            "Update successful: " + newStatus,
                             Toast.LENGTH_SHORT).show();
 
                     // Refresh orders
                     loadOrdersFromApi();
                 } else {
                     Toast.makeText(OrderActivity.this,
-                            "Không thể cập nhật (Lỗi: " + response.code() + ")",
+                            "Cannot update (Error: " + response.code() + ")",
                             Toast.LENGTH_SHORT).show();
                 }
             }
@@ -246,10 +299,72 @@ public class OrderActivity extends AppCompatActivity implements OrderAdapter.Ord
             @Override
             public void onFailure(Call<List<Order>> call, Throwable t) {
                 Toast.makeText(OrderActivity.this,
-                        "Lỗi kết nối: " + t.getMessage(),
+                        "Connection error: " + t.getMessage(),
                         Toast.LENGTH_SHORT).show();
             }
         });
+    }
+
+    /**
+     * Loads order items for a specific order
+     * 
+     * @param order The order to load items for
+     */
+    private void loadOrderItems(Order order) {
+        if (order == null || order.getId() == null) {
+            Toast.makeText(this, "Cannot load order details", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        Log.d(TAG, "Loading order items for order: " + order.getId());
+
+        // Use RPC function to get order items - this bypasses RLS issues
+        Call<List<OrderItem>> call = apiService.getOrderItemsViaRPC(order.getId());
+        call.enqueue(new Callback<List<OrderItem>>() {
+            @Override
+            public void onResponse(Call<List<OrderItem>> call, Response<List<OrderItem>> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    List<OrderItem> items = response.body();
+                    Log.d(TAG, "API Success: Received " + items.size() + " order items");
+
+                    if (items.isEmpty()) {
+                        Toast.makeText(OrderActivity.this, "No products in this order",
+                                Toast.LENGTH_SHORT).show();
+                    } else {
+                        displayOrderItems(items);
+                    }
+                } else {
+                    Log.w(TAG, "API Failed: " + response.code() + " - " + response.message());
+                    Toast.makeText(OrderActivity.this, "Cannot load order details", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<List<OrderItem>> call, Throwable t) {
+                Log.e(TAG, "API Error: " + t.getMessage(), t);
+                Toast.makeText(OrderActivity.this, "Connection error when loading order details", Toast.LENGTH_SHORT)
+                        .show();
+            }
+        });
+    }
+
+    /**
+     * Displays order items in a dialog
+     * 
+     * @param items The list of order items to display
+     */
+    private void displayOrderItems(List<OrderItem> items) {
+        // Create a recycler view to display the items
+        RecyclerView recyclerView = new RecyclerView(this);
+        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+
+        // Set up the adapter
+        OrderItemAdapter adapter = new OrderItemAdapter(items);
+        recyclerView.setAdapter(adapter); // Show the dialog
+        new MaterialAlertDialogBuilder(this)
+                .setTitle("Order Details")
+                .setView(recyclerView)
+                .setPositiveButton("Close", null)
+                .show();
     }
 
     @Override

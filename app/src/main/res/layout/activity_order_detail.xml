@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools" android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical" tools:context=".OrderDetailActivity">
+
+    <com.google.android.material.appbar.AppBarLayout android:layout_width="match_parent" android:layout_height="wrap_content">
+
+        <com.google.android.material.appbar.MaterialToolbar android:id="@+id/toolbar" android:layout_width="match_parent" android:layout_height="?attr/actionBarSize" app:title="Order Details" app:titleTextColor="@android:color/white" android:background="?attr/colorPrimary" />
+
+    </com.google.android.material.appbar.AppBarLayout>
+
+    <!-- Order Basic Info -->
+    <com.google.android.material.card.MaterialCardView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_margin="12dp" app:cardCornerRadius="8dp" app:cardElevation="2dp">
+
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="16dp">
+
+            <TextView android:id="@+id/orderIdText" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Order ID: #123456" android:textSize="16sp" android:textStyle="bold" android:textColor="@android:color/black" />
+
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:layout_marginTop="8dp">
+
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Status:" android:textSize="14sp" />
+
+                <TextView android:id="@+id/statusText" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Processing" android:textSize="14sp" android:textStyle="bold" android:textColor="#4CAF50" android:layout_marginStart="8dp" />
+
+                <View android:layout_width="0dp" android:layout_height="0dp" android:layout_weight="1" />
+
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Total:" android:textSize="14sp" />
+
+                <TextView android:id="@+id/totalPriceText" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="50.00€" android:textSize="16sp" android:textStyle="bold" android:textColor="#D32F2F" android:layout_marginStart="8dp" />
+            </LinearLayout>
+        </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
+
+    <!-- Title for Order Items -->
+    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Products in this order:" android:textSize="16sp" android:textStyle="bold" android:layout_marginStart="16dp" android:layout_marginTop="16dp" android:layout_marginBottom="8dp" />
+
+    <!-- List of Order Items -->
+    <FrameLayout android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1">
+
+        <androidx.recyclerview.widget.RecyclerView android:id="@+id/recyclerViewOrderItems" android:layout_width="match_parent" android:layout_height="match_parent" android:paddingHorizontal="8dp" android:clipToPadding="false" />
+
+        <TextView android:id="@+id/emptyItemsText" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="No products in this order" android:textAlignment="center" android:textSize="16sp" android:visibility="gone" android:layout_gravity="center" />
+    </FrameLayout>
+
+    <!-- Bottom Button -->
+    <com.google.android.material.button.MaterialButton android:id="@+id/backButton" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Back" android:padding="12dp" android:layout_margin="16dp" app:cornerRadius="8dp" />
+
+</LinearLayout>

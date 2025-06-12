@@ -22,9 +22,7 @@ public class LoginActivity extends AppCompatActivity {
         setContentView(R.layout.activity_login);
 
         initViews();
-        setupClickListeners();
-
-        // Kiểm tra xem user đã đăng nhập chưa
+        setupClickListeners(); // Check if user is already logged in
         checkIfAlreadyLoggedIn();
     }
 
@@ -39,7 +37,7 @@ public class LoginActivity extends AppCompatActivity {
             if (!code.isEmpty()) {
                 authenticateStaff(code);
             } else {
-                Toast.makeText(this, "Vui lòng nhập mã nhân viên!", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "Please enter your staff ID!", Toast.LENGTH_SHORT).show();
             }
         });
     }
@@ -56,20 +54,19 @@ public class LoginActivity extends AppCompatActivity {
 
     private void authenticateStaff(String code) {
         // Set loading state
-        setLoadingState(true);
-
-        // 🔑 CHỈ SỬ DỤNG DEMO CODES - KHÔNG CẦN API
+        setLoadingState(true); // 🔑 ONLY USE DEMO CODES - NO API NEEDED
         if (isValidStaffCode(code)) {
             Log.d(TAG, "Valid staff code entered: " + code);
             handleStaffLogin(code);
         } else {
             setLoadingState(false);
-            Toast.makeText(this, "Mã nhân viên không hợp lệ!\n\nMã hợp lệ: 1234, admin, 0001, manager, staff, cashier", Toast.LENGTH_LONG).show();
+            Toast.makeText(this, "Invalid staff ID!\n\nValid codes: 1234, admin, 0001, manager, staff, cashier",
+                    Toast.LENGTH_LONG).show();
         }
     }
 
     private boolean isValidStaffCode(String code) {
-        // 🎯 ĐỊNH NGHĨA CÁC MÃ NHÂN VIÊN HỢP LỆ
+        // 🎯 DEFINE VALID STAFF CODES
         return code.equals("1234") ||
                 code.equals("admin") ||
                 code.equals("0001") ||
@@ -82,60 +79,56 @@ public class LoginActivity extends AppCompatActivity {
         try {
             String staffName;
             String staffPosition;
-            String staffPhone;
-
-            // 👤 THÔNG TIN NHÂN VIÊN DỰA TRÊN MÃ
+            String staffPhone; // 👤 STAFF INFORMATION BASED ON CODE
             switch (code) {
                 case "1234":
-                    staffName = "Nguyễn Văn Demo";
-                    staffPosition = "Nhân viên phục vụ";
+                    staffName = "John Demo";
+                    staffPosition = "Service Staff";
                     staffPhone = "0123456789";
                     break;
                 case "admin":
-                    staffName = "Quản lý Admin";
-                    staffPosition = "Quản lý cửa hàng";
+                    staffName = "Admin Manager";
+                    staffPosition = "Store Manager";
                     staffPhone = "0987654321";
                     break;
                 case "0001":
-                    staffName = "Lê Thị Test";
-                    staffPosition = "Thu ngân";
+                    staffName = "Sarah Test";
+                    staffPosition = "Cashier";
                     staffPhone = "0369258147";
                     break;
                 case "manager":
-                    staffName = "Trần Văn Quản Lý";
-                    staffPosition = "Quản lý ca";
+                    staffName = "Michael Manager";
+                    staffPosition = "Shift Manager";
                     staffPhone = "0901234567";
                     break;
                 case "staff":
-                    staffName = "Phạm Thị Nhân Viên";
-                    staffPosition = "Nhân viên phục vụ";
+                    staffName = "Emma Staff";
+                    staffPosition = "Service Staff";
                     staffPhone = "0912345678";
                     break;
                 case "cashier":
-                    staffName = "Hoàng Văn Thu Ngân";
-                    staffPosition = "Thu ngân";
+                    staffName = "Robert Cashier";
+                    staffPosition = "Cashier";
                     staffPhone = "0923456789";
                     break;
                 default:
-                    staffName = "Nhân viên";
-                    staffPosition = "Nhân viên";
+                    staffName = "Staff";
+                    staffPosition = "Staff";
                     staffPhone = "0000000000";
                     break;
-            }
-
-            // 💾 Lưu thông tin nhân viên
+            } // 💾 Save staff information
             saveStaffInfo(code, staffName, staffPosition, staffPhone);
 
-            // ✅ Hiển thị thông báo thành công
-            Toast.makeText(this, "Đăng nhập thành công! Chào mừng " + staffName, Toast.LENGTH_SHORT).show();
+            // ✅ Show success message
+            Toast.makeText(this, "Login successful! Welcome " + staffName, Toast.LENGTH_SHORT).show();
 
-            // 🏠 Chuyển đến MainActivity
+            // 🏠 Navigate to MainActivity
             navigateToMainActivity();
 
         } catch (Exception e) {
             Log.e(TAG, "Error in staff login: " + e.getMessage(), e);
             setLoadingState(false);
-            Toast.makeText(this, "Lỗi đăng nhập: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Login error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -168,18 +161,18 @@ public class LoginActivity extends AppCompatActivity {
 
         } catch (Exception e) {
             Log.e(TAG, "Error navigating to MainActivity: " + e.getMessage(), e);
-            Toast.makeText(this, "Lỗi chuyển trang: " + e.getMessage(), Toast.LENGTH_LONG).show();
+            Toast.makeText(this, "Page navigation error: " + e.getMessage(), Toast.LENGTH_LONG).show();
         }
     }
 
     private void setLoadingState(boolean isLoading) {
         if (isLoading) {
             loginBtn.setEnabled(false);
-            loginBtn.setText("Đang kiểm tra...");
+            loginBtn.setText("Checking...");
             codeInput.setEnabled(false);
         } else {
             loginBtn.setEnabled(true);
-            loginBtn.setText("Đăng nhập");
+            loginBtn.setText("Login");
             codeInput.setEnabled(true);
         }
     }
@@ -187,7 +180,7 @@ public class LoginActivity extends AppCompatActivity {
     @Override
     public void onBackPressed() {
         // Show exit confirmation or just finish app
-        Toast.makeText(this, "Nhấn lại để thoát ứng dụng", Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, "Press again to exit the application", Toast.LENGTH_SHORT).show();
         super.onBackPressed();
     }
 }

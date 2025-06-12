@@ -1,187 +1,52 @@
 <?xml version="1.0" encoding="utf-8"?>
 <com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    app:cardCornerRadius="8dp"
-    app:cardElevation="2dp"
-    app:cardUseCompatPadding="true"
-    android:layout_marginBottom="8dp"
-    android:layout_marginStart="4dp"
-    android:layout_marginEnd="4dp"
-    app:strokeWidth="1dp"
-    app:strokeColor="#E0E0E0">
+    xmlns:app="http://schemas.android.com/apk/res-auto" android:layout_width="match_parent" android:layout_height="wrap_content" app:cardCornerRadius="8dp" app:cardElevation="2dp" app:cardUseCompatPadding="true" android:layout_marginBottom="8dp" android:layout_marginStart="4dp" android:layout_marginEnd="4dp" app:strokeWidth="1dp" app:strokeColor="#E0E0E0">
 
     <!-- LinearLayout gốc bao toàn bộ nội dung -->
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="12dp">
-
-        <!-- Title -->
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="🍽️ Chi tiết món ăn"
-            android:textSize="18sp"
-            android:textStyle="bold"
-            android:textColor="#2E2E2E"
-            android:layout_marginBottom="12dp" />
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="12dp">        <!-- Title -->
+        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="🍽️ Food Details" android:textSize="18sp" android:textStyle="bold" android:textColor="#2E2E2E" android:layout_marginBottom="12dp" />
 
         <!-- Main Content -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal">
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal">
 
             <!-- Product Icon -->
-            <TextView
-                android:id="@+id/productIcon"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:text="☕"
-                android:textSize="24sp"
-                android:gravity="center"
-                android:background="@drawable/circle_background"
-                android:backgroundTint="#FFF3E0"
-                android:layout_marginEnd="12dp"
-                android:layout_gravity="top" />
+            <TextView android:id="@+id/productIcon" android:layout_width="40dp" android:layout_height="40dp" android:text="☕" android:textSize="24sp" android:gravity="center" android:background="@drawable/circle_background" android:backgroundTint="#FFF3E0" android:layout_marginEnd="12dp" android:layout_gravity="top" />
 
             <!-- Product Info -->
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:orientation="vertical">
-
-                <TextView
-                    android:id="@+id/itemName"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Cà Phê Sữa Đá (Size L)"
-                    android:textSize="16sp"
-                    android:textStyle="bold"
-                    android:textColor="#2E2E2E"
-                    android:fontFamily="sans-serif-medium" />
-
-                <TextView
-                    android:id="@+id/customizations"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Sữa: Ít ngọt • Topping: Trân châu"
-                    android:textSize="13sp"
-                    android:textColor="#666666"
-                    android:layout_marginTop="2dp"
-                    android:visibility="gone" />
+            <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical">
+                <TextView android:id="@+id/itemName" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Iced Milk Coffee (Size L)" android:textSize="16sp" android:textStyle="bold" android:textColor="#2E2E2E" android:fontFamily="sans-serif-medium" />
+                <TextView android:id="@+id/customizations" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Milk: Less sweet • Topping: Boba pearls" android:textSize="13sp" android:textColor="#666666" android:layout_marginTop="2dp" android:visibility="gone" />
 
                 <!-- Quantity and Price -->
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:gravity="center_vertical"
-                    android:layout_marginTop="6dp">
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical" android:layout_marginTop="6dp">
 
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="🔢"
-                        android:textSize="14sp"
-                        android:layout_marginEnd="4dp" />
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="🔢" android:textSize="14sp" android:layout_marginEnd="4dp" />
+                    <TextView android:id="@+id/itemQty" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Quantity: 2" android:textSize="14sp" android:textColor="#5D4037" android:textStyle="bold" />
 
-                    <TextView
-                        android:id="@+id/itemQty"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Số lượng: 2"
-                        android:textSize="14sp"
-                        android:textColor="#5D4037"
-                        android:textStyle="bold" />
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text=" × " android:textSize="14sp" android:textColor="#666666" android:layout_marginStart="8dp" android:layout_marginEnd="8dp" />
 
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text=" × "
-                        android:textSize="14sp"
-                        android:textColor="#666666"
-                        android:layout_marginStart="8dp"
-                        android:layout_marginEnd="8dp" />
-
-                    <TextView
-                        android:id="@+id/unitPrice"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="25.000đ"
-                        android:textSize="14sp"
-                        android:textColor="#666666" />
+                    <TextView android:id="@+id/unitPrice" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="$25.00" android:textSize="14sp" android:textColor="#666666" />
                 </LinearLayout>
             </LinearLayout>
 
             <!-- Total Price -->
-            <LinearLayout
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:gravity="end">
+            <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content" android:orientation="vertical" android:gravity="end">
 
-                <TextView
-                    android:id="@+id/totalPrice"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="50.000đ"
-                    android:textSize="18sp"
-                    android:textStyle="bold"
-                    android:textColor="#D32F2F"
-                    android:fontFamily="sans-serif-medium" />
+                <TextView android:id="@+id/totalPrice" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="$50.00" android:textSize="18sp" android:textStyle="bold" android:textColor="#D32F2F" android:fontFamily="sans-serif-medium" />
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Thành tiền"
-                    android:textSize="11sp"
-                    android:textColor="#999999"
-                    android:layout_marginTop="2dp" />
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Total" android:textSize="11sp" android:textColor="#999999" android:layout_marginTop="2dp" />
             </LinearLayout>
         </LinearLayout>
 
         <!-- RecyclerView cho danh sách item -->
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/recyclerViewOrderItems"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:nestedScrollingEnabled="false"
-            android:layout_marginTop="12dp" />
+        <androidx.recyclerview.widget.RecyclerView android:id="@+id/recyclerViewOrderItems" android:layout_width="match_parent" android:layout_height="wrap_content" android:nestedScrollingEnabled="false" android:layout_marginTop="12dp" />
 
         <!-- Action Buttons nằm cuối cùng -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_marginTop="16dp"
-            android:gravity="center">
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:layout_marginTop="16dp" android:gravity="center">
 
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnUpdateStatus"
-                android:layout_width="0dp"
-                android:layout_height="48dp"
-                android:layout_weight="1"
-                android:text="Cập nhật trạng thái"
-                android:textSize="14sp"
-                android:layout_marginEnd="8dp"
-                app:cornerRadius="24dp"
-                android:backgroundTint="#4CAF50" />
+            <com.google.android.material.button.MaterialButton android:id="@+id/btnUpdateStatus" android:layout_width="0dp" android:layout_height="48dp" android:layout_weight="1" android:text="Update Status" android:textSize="14sp" android:layout_marginEnd="8dp" app:cornerRadius="24dp" android:backgroundTint="#4CAF50" />
 
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnPrint"
-                android:layout_width="0dp"
-                android:layout_height="48dp"
-                android:layout_weight="1"
-                android:text="In đơn hàng"
-                android:textSize="14sp"
-                android:layout_marginStart="8dp"
-                style="@style/Widget.Material3.Button.OutlinedButton"
-                app:cornerRadius="24dp" />
+            <com.google.android.material.button.MaterialButton android:id="@+id/btnPrint" android:layout_width="0dp" android:layout_height="48dp" android:layout_weight="1" android:text="Print Order" android:textSize="14sp" android:layout_marginStart="8dp" style="@style/Widget.Material3.Button.OutlinedButton" app:cornerRadius="24dp" />
         </LinearLayout>
     </LinearLayout>
 </com.google.android.material.card.MaterialCardView>

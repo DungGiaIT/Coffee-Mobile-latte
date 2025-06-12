@@ -1,261 +1,78 @@
 <?xml version="1.0" encoding="utf-8"?>
 <com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    app:cardCornerRadius="12dp"
-    app:cardElevation="3dp"
-    app:cardUseCompatPadding="true"
-    android:layout_marginBottom="8dp"
-    android:layout_marginStart="4dp"
-    android:layout_marginEnd="4dp"
-    app:strokeWidth="1dp"
-    app:strokeColor="#E0E0E0">
+    xmlns:app="http://schemas.android.com/apk/res-auto" android:layout_width="match_parent" android:layout_height="wrap_content" app:cardCornerRadius="12dp" app:cardElevation="3dp" app:cardUseCompatPadding="true" android:layout_marginBottom="8dp" android:layout_marginStart="4dp" android:layout_marginEnd="4dp" app:strokeWidth="1dp" app:strokeColor="#E0E0E0">
 
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="16dp">
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="16dp">
 
         <!-- Header Row: Table Order + Status -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical"
-            android:layout_marginBottom="8dp">
-
-            <!-- 🍽️ THAY ĐỔI: Hiển thị "Đơn hàng của bàn X" thay vì Order ID -->
-            <TextView
-                android:id="@+id/orderId"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Đơn hàng của bàn 1"
-                android:textSize="16sp"
-                android:textStyle="bold"
-                android:textColor="#2E2E2E"
-                android:fontFamily="sans-serif-medium"/>
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical" android:layout_marginBottom="8dp">            <!-- 🍽️ CHANGE: Show "Order for table X" instead of Order ID -->
+            <TextView android:id="@+id/orderId" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="Order for table 1" android:textSize="16sp" android:textStyle="bold" android:textColor="#2E2E2E" android:fontFamily="sans-serif-medium"/>
 
             <!-- Status Badge -->
-            <com.google.android.material.card.MaterialCardView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                app:cardCornerRadius="12dp"
-                app:cardElevation="0dp"
-                android:id="@+id/statusCard">
+            <com.google.android.material.card.MaterialCardView android:layout_width="wrap_content" android:layout_height="wrap_content" app:cardCornerRadius="12dp" app:cardElevation="0dp" android:id="@+id/statusCard">
 
-                <TextView
-                    android:id="@+id/orderStatus"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="PENDING"
-                    android:textSize="12sp"
-                    android:textStyle="bold"
-                    android:textColor="#FFFFFF"
-                    android:background="#FF9800"
-                    android:paddingStart="12dp"
-                    android:paddingEnd="12dp"
-                    android:paddingTop="4dp"
-                    android:paddingBottom="4dp"/>
+                <TextView android:id="@+id/orderStatus" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="PENDING" android:textSize="12sp" android:textStyle="bold" android:textColor="#FFFFFF" android:background="#FF9800" android:paddingStart="12dp" android:paddingEnd="12dp" android:paddingTop="4dp" android:paddingBottom="4dp"/>
             </com.google.android.material.card.MaterialCardView>
         </LinearLayout>
 
         <!-- Order ID Row (thông tin bổ sung) -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical"
-            android:layout_marginBottom="8dp">
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical" android:layout_marginBottom="8dp">
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="🆔"
-                android:textSize="14sp"
-                android:layout_marginEnd="6dp"/>
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="🆔" android:textSize="14sp" android:layout_marginEnd="6dp"/>
 
-            <TextView
-                android:id="@+id/orderIdDetail"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="ID: 12345678"
-                android:textSize="13sp"
-                android:textColor="#666666"/>
+            <TextView android:id="@+id/orderIdDetail" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="ID: 12345678" android:textSize="13sp" android:textColor="#666666"/>
 
             <!-- Total Price -->
-            <TextView
-                android:id="@+id/totalPrice"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="45.000đ"
-                android:textSize="18sp"
-                android:textStyle="bold"
-                android:textColor="#D32F2F"
-                android:fontFamily="sans-serif-medium"/>
+            <TextView android:id="@+id/totalPrice" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="$45.00" android:textSize="18sp" android:textStyle="bold" android:textColor="#D32F2F" android:fontFamily="sans-serif-medium"/>
         </LinearLayout>
 
         <!-- Delivery Method Row -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical"
-            android:layout_marginBottom="8dp">
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical" android:layout_marginBottom="8dp">
 
             <!-- Delivery Icon + Method -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical">
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
 
-                <TextView
-                    android:id="@+id/deliveryIcon"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="🚚"
-                    android:textSize="16sp"
-                    android:layout_marginEnd="6dp"/>
+                <TextView android:id="@+id/deliveryIcon" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="🚚" android:textSize="16sp" android:layout_marginEnd="6dp"/>
 
-                <TextView
-                    android:id="@+id/deliveryMethod"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="DELIVERY"
-                    android:textSize="14sp"
-                    android:textColor="#4CAF50"
-                    android:textStyle="bold"/>
+                <TextView android:id="@+id/deliveryMethod" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="DELIVERY" android:textSize="14sp" android:textColor="#4CAF50" android:textStyle="bold"/>
             </LinearLayout>
         </LinearLayout>
 
-        <!-- Customer Info (NEW - thêm thông tin khách hàng) -->
-        <LinearLayout
-            android:id="@+id/customerLayout"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="top"
-            android:layout_marginBottom="8dp"
-            android:visibility="gone">
+        <!-- Customer Info (NEW - add customer information) -->
+        <LinearLayout android:id="@+id/customerLayout" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="top" android:layout_marginBottom="8dp" android:visibility="gone">
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="👤"
-                android:textSize="14sp"
-                android:layout_marginEnd="6dp"
-                android:layout_marginTop="1dp"/>
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="👤" android:textSize="14sp" android:layout_marginEnd="6dp" android:layout_marginTop="1dp"/>
 
-            <TextView
-                android:id="@+id/customerInfo"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Khách: Nguyễn Văn A - 0123456789"
-                android:textSize="13sp"
-                android:textColor="#666666"
-                android:lineSpacingExtra="2dp"/>
+            <TextView android:id="@+id/customerInfo" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="Customer: John Doe - 0123456789" android:textSize="13sp" android:textColor="#666666" android:lineSpacingExtra="2dp"/>
         </LinearLayout>
 
         <!-- Delivery Address (if exists) -->
-        <LinearLayout
-            android:id="@+id/addressLayout"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="top"
-            android:layout_marginBottom="8dp"
-            android:visibility="gone">
+        <LinearLayout android:id="@+id/addressLayout" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="top" android:layout_marginBottom="8dp" android:visibility="gone">
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="📍"
-                android:textSize="14sp"
-                android:layout_marginEnd="6dp"
-                android:layout_marginTop="1dp"/>
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="📍" android:textSize="14sp" android:layout_marginEnd="6dp" android:layout_marginTop="1dp"/>
 
-            <TextView
-                android:id="@+id/deliveryAddress"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="123 Ngô Hành Sơn, Đà Nẵng, Vietnam"
-                android:textSize="13sp"
-                android:textColor="#666666"
-                android:lineSpacingExtra="2dp"/>
+            <TextView android:id="@+id/deliveryAddress" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="123 Main Street, New York, USA" android:textSize="13sp" android:textColor="#666666" android:lineSpacingExtra="2dp"/>
         </LinearLayout>
 
         <!-- Note (if exists) -->
-        <LinearLayout
-            android:id="@+id/noteLayout"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="top"
-            android:layout_marginBottom="8dp"
-            android:visibility="gone">
+        <LinearLayout android:id="@+id/noteLayout" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="top" android:layout_marginBottom="8dp" android:visibility="gone">
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="💬"
-                android:textSize="14sp"
-                android:layout_marginEnd="6dp"
-                android:layout_marginTop="1dp"/>
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="💬" android:textSize="14sp" android:layout_marginEnd="6dp" android:layout_marginTop="1dp"/>
 
-            <TextView
-                android:id="@+id/orderNote"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Ghi chú: Ít ngọt, nhiều đá"
-                android:textSize="13sp"
-                android:textColor="#666666"
-                android:fontStyle="italic"
-                android:lineSpacingExtra="2dp"/>
+            <TextView android:id="@+id/orderNote" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="Note: Less sweet, extra ice" android:textSize="13sp" android:textColor="#666666" android:fontStyle="italic" android:lineSpacingExtra="2dp"/>
         </LinearLayout>
 
         <!-- Divider -->
-        <View
-            android:layout_width="match_parent"
-            android:layout_height="1dp"
-            android:background="#E0E0E0"
-            android:layout_marginTop="4dp"
-            android:layout_marginBottom="8dp"/>
+        <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#E0E0E0" android:layout_marginTop="4dp" android:layout_marginBottom="8dp"/>
 
         <!-- Action Buttons Row -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="end">
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="end">
 
             <!-- View Details Button -->
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnViewDetails"
-                android:layout_width="wrap_content"
-                android:layout_height="36dp"
-                android:text="Chi tiết"
-                android:textSize="12sp"
-                android:textColor="#1976D2"
-                style="@style/Widget.Material3.Button.TextButton"
-                android:layout_marginEnd="8dp"/>
+            <com.google.android.material.button.MaterialButton android:id="@+id/btnViewDetails" android:layout_width="wrap_content" android:layout_height="36dp" android:text="Details" android:textSize="12sp" android:textColor="#1976D2" style="@style/Widget.Material3.Button.TextButton" android:layout_marginEnd="8dp"/>
 
             <!-- Status Update Button -->
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnUpdateStatus"
-                android:layout_width="wrap_content"
-                android:layout_height="36dp"
-                android:text="Cập nhật"
-                android:textSize="12sp"
-                android:textColor="#FFFFFF"
-                android:backgroundTint="#4CAF50"
-                app:cornerRadius="18dp"/>
+            <com.google.android.material.button.MaterialButton android:id="@+id/btnUpdateStatus" android:layout_width="wrap_content" android:layout_height="36dp" android:text="Update" android:textSize="12sp" android:textColor="#FFFFFF" android:backgroundTint="#4CAF50" app:cornerRadius="18dp"/>
         </LinearLayout>
     </LinearLayout>
 </com.google.android.material.card.MaterialCardView>

@@ -23,6 +23,7 @@ public class OrderAdapter extends RecyclerView.Adapter<OrderAdapter.ViewHolder> 
 
     public interface OrderClickListener {
         void onViewDetailsClick(Order order);
+
         void onUpdateStatusClick(Order order);
     }
 
@@ -92,15 +93,16 @@ public class OrderAdapter extends RecyclerView.Adapter<OrderAdapter.ViewHolder> 
         }
 
         public void bind(Order order) {
-            if (order == null) return;
+            if (order == null)
+                return;
 
             // Set basic order info with null checking
             if (orderId != null) {
-                // Hiển thị table hoặc delivery info
+                // Display table or delivery info
                 if (order.getTableId() != null && !order.getTableId().equals("NULL")) {
-                    orderId.setText("Đơn hàng của " + order.getTableId());
+                    orderId.setText("Order for " + order.getTableId());
                 } else {
-                    orderId.setText("Đơn hàng giao hàng");
+                    orderId.setText("Delivery Order");
                 }
             }
 
@@ -115,33 +117,29 @@ public class OrderAdapter extends RecyclerView.Adapter<OrderAdapter.ViewHolder> 
                 setupStatusColor(status);
             }
 
-            // Set price - định dạng theo Euro như trong database
+            // Set price - format as currency as in database
             if (totalPrice != null) {
                 totalPrice.setText(String.format("%.2f€", order.getTotal()));
             }
 
             // Set delivery method
-            setupDeliveryMethod(order.getDeliveryMethod());
-
-            // Hiển thị thông tin khách hàng nếu có
+            setupDeliveryMethod(order.getDeliveryMethod()); // Display customer information if available
             if (order.getCustomerName() != null && !order.getCustomerName().isEmpty()) {
                 TextView customerInfo = itemView.findViewById(R.id.customerInfo);
                 if (customerInfo != null && customerLayout != null) {
                     customerLayout.setVisibility(View.VISIBLE);
-                    String customerText = "Khách: " + order.getCustomerName();
+                    String customerText = "Customer: " + order.getCustomerName();
                     if (order.getCustomerPhone() != null) {
                         customerText += " - " + order.getCustomerPhone();
                     }
                     customerInfo.setText(customerText);
                 }
-            }
-
-            // Hiển thị note nếu có
+            } // Display note if available
             if (order.getNote() != null && !order.getNote().isEmpty() && !order.getNote().equals("EMPTY")) {
                 TextView orderNote = itemView.findViewById(R.id.orderNote);
                 if (orderNote != null && noteLayout != null) {
                     noteLayout.setVisibility(View.VISIBLE);
-                    orderNote.setText("Ghi chú: " + order.getNote());
+                    orderNote.setText("Note: " + order.getNote());
                 }
             }
 
@@ -157,9 +155,11 @@ public class OrderAdapter extends RecyclerView.Adapter<OrderAdapter.ViewHolder> 
         }
 
         private void setupStatusColor(String status) {
-            if (orderStatus == null || context == null) return;
+            if (orderStatus == null || context == null)
+                return;
 
-            if (status == null) status = "PENDING";
+            if (status == null)
+                status = "PENDING";
 
             int backgroundColor;
             switch (status.toUpperCase()) {
@@ -182,9 +182,11 @@ public class OrderAdapter extends RecyclerView.Adapter<OrderAdapter.ViewHolder> 
         }
 
         private void setupDeliveryMethod(String method) {
-            if (deliveryIcon == null || deliveryMethod == null || context == null) return;
+            if (deliveryIcon == null || deliveryMethod == null || context == null)
+                return;
 
-            if (method == null) method = "PICKUP";
+            if (method == null)
+                method = "PICKUP";
 
             String icon;
             int textColor;
