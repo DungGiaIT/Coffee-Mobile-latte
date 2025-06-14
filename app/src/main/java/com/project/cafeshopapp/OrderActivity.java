@@ -6,6 +6,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
 import android.view.View;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
@@ -28,7 +29,7 @@ public class OrderActivity extends AppCompatActivity implements OrderAdapter.Ord
     private TextView tableLabel;
     private RecyclerView orderList;
     private MaterialButton confirmBtn;
-    private TextView emptyOrderText;
+    private LinearLayout emptyOrderText;
 
     private int tableNumber;
     private String tableStatus;
@@ -97,13 +98,12 @@ public class OrderActivity extends AppCompatActivity implements OrderAdapter.Ord
         orderAdapter = new OrderAdapter(orders, this);
         orderList.setLayoutManager(new LinearLayoutManager(this));
         orderList.setAdapter(orderAdapter);
-    }
-
-    private void loadOrdersFromApi() {
+    }    private void loadOrdersFromApi() {
         Log.d(TAG, "Loading orders for table: " + tableNumber);
 
-        // Use the new API endpoint for Orders
-        Call<List<Order>> call = apiService.getOrdersByTable("eq.table" + tableNumber);
+        // Use the new API endpoint for Orders with select parameter
+        String selectFields = "id,tableId,total,status,customerName,customerEmail,customerPhone,note,createdAt";
+        Call<List<Order>> call = apiService.getOrdersByTableWithSelect("eq.table" + tableNumber, selectFields);
 
         call.enqueue(new Callback<List<Order>>() {
             @Override
@@ -131,11 +131,9 @@ public class OrderActivity extends AppCompatActivity implements OrderAdapter.Ord
         });
     }
 
-    private void updateUI() {
-        if (orders.isEmpty()) {
+    private void updateUI() {        if (orders.isEmpty()) {
             emptyOrderText.setVisibility(View.VISIBLE);
             orderList.setVisibility(View.GONE);
-            emptyOrderText.setText("Table " + tableNumber + " has no orders yet");
 
             // Update table status to "available" if there are no orders
             if (!"available".equalsIgnoreCase(tableStatus)) {
@@ -162,15 +160,18 @@ public class OrderActivity extends AppCompatActivity implements OrderAdapter.Ord
     private void loadSampleData() {
         Log.d(TAG, "Loading sample order data for table: " + tableNumber);
 
-        orders.clear();
-
-        // Only add sample orders for tables that should have orders (based on our data
+        orders.clear();        // Only add sample orders for tables that should have orders (based on our data
         // model)
         // Tables 3, 4, 7, and 8 should be available (have no orders)
         if (tableNumber != 3 && tableNumber != 4 && tableNumber != 7 && tableNumber != 8) {
             // Sample data based on the screenshot
-            orders.add(new Order("cmbq9wn1n0000lc04r92w06f0", "table" + tableNumber, 13.09, "PENDING", "PICKUP", null));
-            orders.add(new Order("cmbqmmbzd000jy04tcrpr459", "table" + tableNumber, 5.39, "PENDING", "PICKUP", null));
+            Order order1 = new Order("cmbq9wn1n0000lc04r92w06f0", "table" + tableNumber, 13.09, "PENDING");
+            order1.setCustomerName("Khanh Le");
+            orders.add(order1);
+            
+            Order order2 = new Order("cmbqmmbzd000jy04tcrpr459", "table" + tableNumber, 5.39, "PENDING");
+            order2.setCustomerName("Khanh Le");
+            orders.add(order2);
         }
 
         updateUI();

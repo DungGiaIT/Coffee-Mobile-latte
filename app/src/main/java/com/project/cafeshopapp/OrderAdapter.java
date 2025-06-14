@@ -62,32 +62,21 @@ public class OrderAdapter extends RecyclerView.Adapter<OrderAdapter.ViewHolder> 
     public void updateData(List<Order> newOrders) {
         this.orders = newOrders;
         notifyDataSetChanged();
-    }
-
-    public class ViewHolder extends RecyclerView.ViewHolder {
+    }    public class ViewHolder extends RecyclerView.ViewHolder {
         TextView orderId, orderIdDetail, orderStatus, totalPrice;
-        TextView deliveryIcon, deliveryMethod;
-        LinearLayout customerLayout, addressLayout, noteLayout;
+        LinearLayout customerLayout, noteLayout;
         MaterialButton btnViewDetails, btnUpdateStatus;
         MaterialCardView statusCard;
 
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
 
-            // Find all views with null checking
-            orderId = itemView.findViewById(R.id.orderId);
+            // Find all views with null checking            orderId = itemView.findViewById(R.id.orderId);
             orderIdDetail = itemView.findViewById(R.id.orderIdDetail);
             orderStatus = itemView.findViewById(R.id.orderStatus);
             totalPrice = itemView.findViewById(R.id.totalPrice);
-            deliveryIcon = itemView.findViewById(R.id.deliveryIcon);
-            deliveryMethod = itemView.findViewById(R.id.deliveryMethod);
-            statusCard = itemView.findViewById(R.id.statusCard);
-
-            customerLayout = itemView.findViewById(R.id.customerLayout);
-            addressLayout = itemView.findViewById(R.id.addressLayout);
-            noteLayout = itemView.findViewById(R.id.noteLayout);
-
-            // Buttons
+            statusCard = itemView.findViewById(R.id.statusCard);            customerLayout = itemView.findViewById(R.id.customerLayout);
+            noteLayout = itemView.findViewById(R.id.noteLayout);            // Buttons - these might be null if the layout doesn't have them
             btnViewDetails = itemView.findViewById(R.id.btnViewDetails);
             btnUpdateStatus = itemView.findViewById(R.id.btnUpdateStatus);
         }
@@ -115,15 +104,12 @@ public class OrderAdapter extends RecyclerView.Adapter<OrderAdapter.ViewHolder> 
                 String status = order.getStatus() != null ? order.getStatus().toUpperCase() : "PENDING";
                 orderStatus.setText(status);
                 setupStatusColor(status);
-            }
-
-            // Set price - format as currency as in database
+            }            // Set price - format as currency as in database
             if (totalPrice != null) {
                 totalPrice.setText(String.format("%.2f€", order.getTotal()));
             }
 
-            // Set delivery method
-            setupDeliveryMethod(order.getDeliveryMethod()); // Display customer information if available
+            // Display customer information if available
             if (order.getCustomerName() != null && !order.getCustomerName().isEmpty()) {
                 TextView customerInfo = itemView.findViewById(R.id.customerInfo);
                 if (customerInfo != null && customerLayout != null) {
@@ -176,36 +162,7 @@ public class OrderAdapter extends RecyclerView.Adapter<OrderAdapter.ViewHolder> 
                 default:
                     backgroundColor = context.getResources().getColor(R.color.status_pending);
                     break;
-            }
-
-            orderStatus.setBackgroundColor(backgroundColor);
-        }
-
-        private void setupDeliveryMethod(String method) {
-            if (deliveryIcon == null || deliveryMethod == null || context == null)
-                return;
-
-            if (method == null)
-                method = "PICKUP";
-
-            String icon;
-            int textColor;
-
-            switch (method.toUpperCase()) {
-                case "DELIVERY":
-                    icon = "🚚";
-                    textColor = context.getResources().getColor(R.color.delivery_color);
-                    break;
-                case "PICKUP":
-                default:
-                    icon = "🥡";
-                    textColor = context.getResources().getColor(R.color.pickup_color);
-                    break;
-            }
-
-            deliveryIcon.setText(icon);
-            deliveryMethod.setText(method.toUpperCase());
-            deliveryMethod.setTextColor(textColor);
+            }            orderStatus.setBackgroundColor(backgroundColor);
         }
     }
 }

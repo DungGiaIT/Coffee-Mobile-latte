@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -30,7 +31,7 @@ public class OrderDetailActivity extends AppCompatActivity {
     private TextView orderIdText;
     private TextView totalPriceText;
     private TextView statusText;
-    private TextView emptyItemsText;
+    private LinearLayout emptyItemsText;
     private MaterialButton backButton;
 
     private String orderId;

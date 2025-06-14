@@ -6,6 +6,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
 import android.view.View;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -27,12 +28,15 @@ import java.util.concurrent.Executors;
 
 public class OrderListActivity extends AppCompatActivity implements OrderAdapter.OrderClickListener {
 
-    private static final String TAG = "OrderListActivity";
-
-    // UI components
+    private static final String TAG = "OrderListActivity";    // UI components
     private RecyclerView recyclerView;
     private SwipeRefreshLayout swipeRefreshLayout;
-    private TextView emptyView;
+    private LinearLayout emptyView;
+    
+    // Stats TextViews
+    private TextView totalOrdersText;
+    private TextView pendingOrdersText;
+    private TextView completedOrdersText;
 
     // Data
     private List<Order> orderList = new ArrayList<>();
@@ -64,12 +68,15 @@ public class OrderListActivity extends AppCompatActivity implements OrderAdapter
 
         // Load orders
         fetchOrders();
-    }
-
-    private void initViews() {
+    }    private void initViews() {
         recyclerView = findViewById(R.id.recyclerViewOrders);
         swipeRefreshLayout = findViewById(R.id.swipeRefreshLayout);
         emptyView = findViewById(R.id.emptyView);
+        
+        // Initialize stats TextViews
+        totalOrdersText = findViewById(R.id.totalOrdersText);
+        pendingOrdersText = findViewById(R.id.pendingOrdersText);
+        completedOrdersText = findViewById(R.id.completedOrdersText);
     }
 
     private void setupRecyclerView() {
@@ -89,10 +96,8 @@ public class OrderListActivity extends AppCompatActivity implements OrderAdapter
 
     private void fetchOrders() {
         Log.d(TAG, "🔄 Fetching orders from API...");
-        swipeRefreshLayout.setRefreshing(true);
-
-        // 🛠️ TRY WITH SELECT PARAMETER TO REDUCE DATA DOWNLOAD
-        String selectFields = "id,tableId,total,status,deliveryMethod,deliveryAddress,customerName,customerPhone,note,createdAt";
+        swipeRefreshLayout.setRefreshing(true);        // 🛠️ TRY WITH SELECT PARAMETER TO REDUCE DATA DOWNLOAD
+        String selectFields = "id,tableId,total,status,customerName,customerEmail,customerPhone,note,createdAt";
         Call<List<Order>> call = apiService.getAllOrdersWithSelect(selectFields);
 
         call.enqueue(new Callback<List<Order>>() {
@@ -173,15 +178,14 @@ public class OrderListActivity extends AppCompatActivity implements OrderAdapter
                             " - Table: " + firstOrder.getTableId() +
                             " - Total: " + firstOrder.getTotal() +
                             " - Status: " + firstOrder.getStatus());
-                }
-
-                // Update UI on main thread
+                }                // Update UI on main thread
                 mainHandler.post(() -> {
                     orderList.clear();
                     orderList.addAll(orders);
                     orderAdapter.notifyDataSetChanged();
 
                     updateEmptyViewVisibility();
+                    updateOrderStats();
 
                     Toast.makeText(OrderListActivity.this,
                             "✅ Loaded " + orders.size() + " orders successfully",
@@ -198,9 +202,7 @@ public class OrderListActivity extends AppCompatActivity implements OrderAdapter
     private void handleApiError(String message) {
         Toast.makeText(this, message, Toast.LENGTH_LONG).show();
         loadSampleData();
-    }
-
-    private void updateEmptyViewVisibility() {
+    }    private void updateEmptyViewVisibility() {
         if (orderList.isEmpty()) {
             recyclerView.setVisibility(View.GONE);
             emptyView.setVisibility(View.VISIBLE);
@@ -210,39 +212,78 @@ public class OrderListActivity extends AppCompatActivity implements OrderAdapter
         }
     }
 
+    private void updateOrderStats() {
+        if (orderList == null) {
+            // Reset stats if no data
+            if (totalOrdersText != null) totalOrdersText.setText("0");
+            if (pendingOrdersText != null) pendingOrdersText.setText("0");
+            if (completedOrdersText != null) completedOrdersText.setText("0");
+            return;
+        }
+
+        int totalOrders = orderList.size();
+        int pendingOrders = 0;
+        int completedOrders = 0;
+
+        // Count orders by status
+        for (Order order : orderList) {
+            if (order != null && order.getStatus() != null) {
+                String status = order.getStatus().toUpperCase();
+                switch (status) {
+                    case "PENDING":
+                    case "PROCESSING":
+                        pendingOrders++;
+                        break;
+                    case "COMPLETED":
+                    case "FINISHED":
+                    case "DELIVERED":
+                        completedOrders++;
+                        break;
+                    // Other statuses like CANCELLED are not counted in either category
+                }
+            }
+        }
+
+        // Update UI
+        if (totalOrdersText != null) {
+            totalOrdersText.setText(String.valueOf(totalOrders));
+        }
+        if (pendingOrdersText != null) {
+            pendingOrdersText.setText(String.valueOf(pendingOrders));
+        }
+        if (completedOrdersText != null) {
+            completedOrdersText.setText(String.valueOf(completedOrders));
+        }
+
+        Log.d(TAG, String.format("📊 Stats updated - Total: %d, Pending: %d, Completed: %d", 
+                totalOrders, pendingOrders, completedOrders));
+    }
+
     private void loadSampleData() {
         Log.d(TAG, "📋 Loading sample data based on database structure...");
 
         // Create sample orders based on the database table in the screenshot
-        orderList.clear();
-
-        // Add sample orders matching the structure in screenshot - with correct
-        // structure
-        // database
-        orderList.add(createSampleOrder("cmbq9wn1n0000lc04r92w06f0", "table1", 13.09, "PENDING", "PICKUP", "Khanh Le"));
-        orderList.add(createSampleOrder("cmbqmmbzd000jy04tcrpr459", "table2", 5.39, "PENDING", "PICKUP", "Khanh Le"));
+        orderList.clear();        // Add sample orders matching the structure in screenshot - with correct database structure
+        orderList.add(createSampleOrder("cmbq9wn1n0000lc04r92w06f0", "table1", 13.09, "PENDING", "Khanh Le"));
+        orderList.add(createSampleOrder("cmbqmmbzd000jy04tcrpr459", "table2", 5.39, "PENDING", "Khanh Le"));
         orderList.add(
-                createSampleOrder("cmbqskpiw0000vctw1mw0dqiy", "table5", 43.67, "PENDING", "PICKUP", "Lê Bảo Khanh"));
-        orderList.add(createSampleOrder("cmbr5tue00000o9cswu6rvdfz", "table1", 28.501, "PENDING", "PICKUP",
+                createSampleOrder("cmbqskpiw0000vctw1mw0dqiy", "table5", 43.67, "PENDING", "Lê Bảo Khanh"));
+        orderList.add(createSampleOrder("cmbr5tue00000o9cswu6rvdfz", "table1", 28.501, "PENDING",
                 "Nguyen Tien Dung"));
         orderList.add(
-                createSampleOrder("cmbr5e6x30002o9csji0mg9h", null, 6.49, "PENDING", "DELIVERY", "Nguyen Tien Dung"));
-        orderList.add(createSampleOrder("cmbr5ql9k0000l404rxg5y1b6", "table1", 21.89, "PENDING", "PICKUP", "du"));
-
-        orderAdapter.notifyDataSetChanged();
+                createSampleOrder("cmbr5e6x30002o9csji0mg9h", null, 6.49, "PENDING", "Nguyen Tien Dung"));
+        orderList.add(createSampleOrder("cmbr5ql9k0000l404rxg5y1b6", "table1", 21.89, "PENDING", "du"));        orderAdapter.notifyDataSetChanged();
         Toast.makeText(this, "📋 Displaying sample data (6 orders)", Toast.LENGTH_SHORT).show();
 
         updateEmptyViewVisibility();
-    }
-
-    private Order createSampleOrder(String id, String tableId, double total, String status, String deliveryMethod,
+        updateOrderStats();
+    }    private Order createSampleOrder(String id, String tableId, double total, String status,
             String customerName) {
         Order order = new Order();
         order.setId(id);
         order.setTableId(tableId);
         order.setTotal(total);
         order.setStatus(status);
-        order.setDeliveryMethod(deliveryMethod);
         order.setCustomerName(customerName);
         order.setCreatedAt("2025-06-11");
         return order;

@@ -10,16 +10,8 @@ public class Order {
     private String tableId;
 
     @SerializedName("total")
-    private double total;
-
-    @SerializedName("status")
+    private double total;    @SerializedName("status")
     private String status;
-
-    @SerializedName("deliveryMethod")
-    private String deliveryMethod;
-
-    @SerializedName("deliveryAddress")
-    private String deliveryAddress;
 
     @SerializedName("customerName")
     private String customerName;
@@ -34,19 +26,14 @@ public class Order {
     private String note;
 
     @SerializedName("createdAt")
-    private String createdAt;
-
-    // Constructors
+    private String createdAt;    // Constructors
     public Order() {}
 
-    public Order(String id, String tableId, double total, String status,
-                 String deliveryMethod, String deliveryAddress) {
+    public Order(String id, String tableId, double total, String status) {
         this.id = id;
         this.tableId = tableId;
         this.total = total;
         this.status = status;
-        this.deliveryMethod = deliveryMethod;
-        this.deliveryAddress = deliveryAddress;
     }
 
     // Getters and Setters
@@ -59,14 +46,7 @@ public class Order {
     public double getTotal() { return total; }
     public void setTotal(double total) { this.total = total; }
 
-    public String getStatus() { return status; }
-    public void setStatus(String status) { this.status = status; }
-
-    public String getDeliveryMethod() { return deliveryMethod; }
-    public void setDeliveryMethod(String deliveryMethod) { this.deliveryMethod = deliveryMethod; }
-
-    public String getDeliveryAddress() { return deliveryAddress; }
-    public void setDeliveryAddress(String deliveryAddress) { this.deliveryAddress = deliveryAddress; }
+    public String getStatus() { return status; }    public void setStatus(String status) { this.status = status; }
 
     public String getCustomerName() { return customerName; }
     public void setCustomerName(String customerName) { this.customerName = customerName; }
