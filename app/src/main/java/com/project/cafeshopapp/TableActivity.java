@@ -34,6 +34,9 @@ public class TableActivity extends AppCompatActivity {
         initViews();
         setupAdapter();
         fetchTablesFromApi();
+
+        // Log that we're implementing the new feature
+        Log.d(TAG, "Implementing table availability feature - tables without orders will be marked as available");
     }
 
     private void initViews() {
@@ -71,7 +74,41 @@ public class TableActivity extends AppCompatActivity {
 
                 Log.d(TAG, "Table clicked: " + tableId + " - Current status: " + selectedTable.getStatus());
 
-                // Update table status to "reserved" when clicked
+                // Check if there are orders for this table
+                checkTableOrders(selectedTable, position);
+            }
+        });
+    }
+
+    private void checkTableOrders(TableModel selectedTable, int position) {
+        int tableId = selectedTable.getTableId();
+        String tableIdParam = "eq.table" + tableId;
+
+        // Get orders for this table
+        Call<List<Order>> call = apiService.getOrdersByTable(tableIdParam);
+        call.enqueue(new Callback<List<Order>>() {
+            @Override
+            public void onResponse(Call<List<Order>> call, Response<List<Order>> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    List<Order> orders = response.body();
+                    Log.d(TAG, "Found " + orders.size() + " orders for table " + tableId);
+
+                    // If no orders, table should be available
+                    String newStatus = orders.isEmpty() ? "available" : "reserved";
+                    Log.d(TAG, "Setting table " + tableId + " status to " + newStatus + " based on " + orders.size()
+                            + " orders");
+                    updateTableStatus(tableId, newStatus, position);
+                } else {
+                    // In case of API error, default to reserved
+                    Log.w(TAG, "Failed to check orders, setting to reserved by default");
+                    updateTableStatus(tableId, "reserved", position);
+                }
+            }
+
+            @Override
+            public void onFailure(Call<List<Order>> call, Throwable t) {
+                Log.e(TAG, "API Error: " + t.getMessage(), t);
+                // In case of connection error, default to reserved
                 updateTableStatus(tableId, "reserved", position);
             }
         });
@@ -87,7 +124,8 @@ public class TableActivity extends AppCompatActivity {
             public void onResponse(Call<List<TableModel>> call, Response<List<TableModel>> response) {
                 if (response.isSuccessful()) {
                     Log.d(TAG, "Table " + tableId + " status updated to " + newStatus);
-                    Toast.makeText(TableActivity.this, "Bàn #" + tableId + " đã được cập nhật", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(TableActivity.this, "Table #" + tableId + " has been updated", Toast.LENGTH_SHORT)
+                            .show();
 
                     // Update local data
                     if (position < tableList.size()) {
@@ -102,11 +140,12 @@ public class TableActivity extends AppCompatActivity {
                     startActivity(intent);
                 } else {
                     Log.e(TAG, "Failed to update table status. Response code: " + response.code());
-                    Toast.makeText(TableActivity.this, "Không thể cập nhật bàn", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(TableActivity.this, "Cannot update table", Toast.LENGTH_SHORT).show();
 
                     // Log error details
                     try {
-                        String errorBody = response.errorBody() != null ? response.errorBody().string() : "No error body";
+                        String errorBody = response.errorBody() != null ? response.errorBody().string()
+                                : "No error body";
                         Log.e(TAG, "Error response: " + errorBody);
                     } catch (Exception e) {
                         Log.e(TAG, "Error reading error body: " + e.getMessage());
@@ -117,7 +156,7 @@ public class TableActivity extends AppCompatActivity {
             @Override
             public void onFailure(Call<List<TableModel>> call, Throwable t) {
                 Log.e(TAG, "Error updating table status: " + t.getMessage(), t);
-                Toast.makeText(TableActivity.this, "Lỗi kết nối khi cập nhật bàn", Toast.LENGTH_SHORT).show();
+                Toast.makeText(TableActivity.this, "Connection error when updating table", Toast.LENGTH_SHORT).show();
             }
         });
     }
@@ -137,13 +176,16 @@ public class TableActivity extends AppCompatActivity {
                     tableList.addAll(response.body());
                     adapter.notifyDataSetChanged();
 
+                    // Check orders for each table and update their status accordingly
+                    checkAllTablesOrders();
+
                     // Log table data for debugging
                     for (TableModel table : response.body()) {
                         Log.d(TAG, "Table ID: " + table.getTableId() + ", Status: " + table.getStatus());
                     }
                 } else {
                     Log.w(TAG, "API Failed: " + response.code() + " - " + response.message());
-                    Toast.makeText(TableActivity.this, "Không tải được dữ liệu bàn", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(TableActivity.this, "Could not load table data", Toast.LENGTH_SHORT).show();
 
                     // Load sample data as fallback
                     loadSampleTables();
@@ -153,7 +195,7 @@ public class TableActivity extends AppCompatActivity {
             @Override
             public void onFailure(Call<List<TableModel>> call, Throwable t) {
                 Log.e(TAG, "API Error: " + t.getMessage(), t);
-                Toast.makeText(TableActivity.this, "Lỗi kết nối: " + t.getMessage(), Toast.LENGTH_LONG).show();
+                Toast.makeText(TableActivity.this, "Connection error: " + t.getMessage(), Toast.LENGTH_LONG).show();
 
                 // Load sample data as fallback
                 loadSampleTables();
@@ -166,9 +208,10 @@ public class TableActivity extends AppCompatActivity {
 
         tableList.clear();
 
-        // Sample data matching database structure
-        String[] statuses = {"reserved", "reserved", "available", "available", "reserved", "reserved", "available", "reserved"};
-        String[] ids = {"table1", "table2", "table3", "table4", "table5", "table6", "table7", "table8"};
+        // Sample data - tables 3, 4, 7, and 8 are available (have no orders)
+        String[] statuses = { "reserved", "reserved", "available", "available", "reserved", "reserved", "available",
+                "available" };
+        String[] ids = { "table1", "table2", "table3", "table4", "table5", "table6", "table7", "table8" };
 
         for (int i = 1; i <= 8; i++) {
             TableModel table = new TableModel();
@@ -179,7 +222,7 @@ public class TableActivity extends AppCompatActivity {
         }
 
         adapter.notifyDataSetChanged();
-        Toast.makeText(this, "Hiển thị dữ liệu mẫu", Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, "Displaying sample data", Toast.LENGTH_SHORT).show();
     }
 
     @Override
@@ -195,5 +238,59 @@ public class TableActivity extends AppCompatActivity {
         Intent intent = new Intent(TableActivity.this, MainActivity.class);
         startActivity(intent);
         finish();
+    }
+
+    /**
+     * Checks orders for all tables and updates their status
+     * Tables with no orders should be marked as "available"
+     */
+    private void checkAllTablesOrders() {
+        Log.d(TAG, "Checking orders for all tables to mark tables without orders as 'available'...");
+
+        for (int i = 0; i < tableList.size(); i++) {
+            TableModel table = tableList.get(i);
+            int tableId = table.getTableId();
+            final int position = i;
+
+            String tableIdParam = "eq.table" + tableId;
+            Call<List<Order>> call = apiService.getOrdersByTable(tableIdParam);
+
+            call.enqueue(new Callback<List<Order>>() {
+                @Override
+                public void onResponse(Call<List<Order>> call, Response<List<Order>> response) {
+                    if (response.isSuccessful() && response.body() != null) {
+                        List<Order> orders = response.body();
+                        String newStatus = orders.isEmpty() ? "available" : "reserved";
+
+                        Log.d(TAG, "Table " + tableId + ": Found " + orders.size() + " orders -> Status should be "
+                                + newStatus);
+
+                        if (!newStatus.equals(table.getStatus())) {
+                            Log.d(TAG, "Table " + tableId + " status updated from " +
+                                    table.getStatus() + " to " + newStatus + " based on " + orders.size() + " orders");
+
+                            // Update the status in the model
+                            table.setStatus(newStatus);
+
+                            // Update UI
+                            adapter.notifyDataSetChanged();
+
+                            // Also update in database (if needed)
+                            updateTableStatus(tableId, newStatus, position);
+                        } else {
+                            Log.d(TAG, "Table " + tableId + " status already correct: " + table.getStatus());
+                        }
+                    } else {
+                        Log.w(TAG, "Failed to check orders for table " + tableId + ": " +
+                                response.code() + " - " + response.message());
+                    }
+                }
+
+                @Override
+                public void onFailure(Call<List<Order>> call, Throwable t) {
+                    Log.e(TAG, "Error checking orders for table " + tableId + ": " + t.getMessage());
+                }
+            });
+        }
     }
 }

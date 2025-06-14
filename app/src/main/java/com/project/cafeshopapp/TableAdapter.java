@@ -58,7 +58,7 @@ public class TableAdapter extends BaseAdapter {
 
         if (position < tableList.size()) {
             TableModel table = tableList.get(position);
-            String formattedNumber = String.format("Bàn %d", table.getTableId());
+            String formattedNumber = String.format("Table %d", table.getTableId());
             holder.number.setText(formattedNumber);
 
             // Handle status based on database values
@@ -66,15 +66,15 @@ public class TableAdapter extends BaseAdapter {
 
             switch (status) {
                 case "reserved":
-                    setTableStatus(holder, R.drawable.ic_reserved, "Đã đặt", R.color.status_serving);
+                    setTableStatus(holder, R.drawable.ic_reserved, "Reserved", R.color.status_serving);
                     break;
                 case "occupied":
                 case "serving":
-                    setTableStatus(holder, R.drawable.ic_coffee_clock, "Đang phục vụ", R.color.status_waiting);
+                    setTableStatus(holder, R.drawable.ic_coffee_clock, "Currently serving", R.color.status_waiting);
                     break;
                 case "available":
                 default:
-                    setTableStatus(holder, R.drawable.ic_table, "Còn trống", R.color.status_empty);
+                    setTableStatus(holder, R.drawable.ic_table, "Available", R.color.status_empty);
                     break;
             }
         }

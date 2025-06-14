@@ -1,242 +1,76 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.swiperefreshlayout.widget.SwipeRefreshLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:id="@+id/swipeRefreshLayout"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent">
+<androidx.swiperefreshlayout.widget.SwipeRefreshLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto" android:id="@+id/swipeRefreshLayout" android:layout_width="match_parent" android:layout_height="match_parent">
 
-    <androidx.coordinatorlayout.widget.CoordinatorLayout
-        android:layout_width="match_parent"
-        android:layout_height="match_parent">
+    <androidx.coordinatorlayout.widget.CoordinatorLayout android:layout_width="match_parent" android:layout_height="match_parent">
 
-        <RelativeLayout
-            android:id="@+id/main"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:background="@drawable/bg_craft_texture">
+        <RelativeLayout android:id="@+id/main" android:layout_width="match_parent" android:layout_height="match_parent" android:background="@drawable/bg_craft_texture">
 
-            <LinearLayout
-                android:id="@+id/header_content"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="16dp">
+            <LinearLayout android:id="@+id/header_content" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="16dp">
 
                 <!-- Header -->
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:gravity="center_vertical"
-                    android:paddingBottom="8dp">
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical" android:paddingBottom="8dp">
 
-                    <ImageView
-                        android:layout_width="32dp"
-                        android:layout_height="32dp"
-                        android:src="@drawable/ic_coffee_logo"
-                        android:contentDescription="Logo" />
+                    <ImageView android:layout_width="32dp" android:layout_height="32dp" android:src="@drawable/ic_coffee_logo" android:contentDescription="Logo" />
 
-                    <TextView
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="COFFEE SHOP"
-                        android:textSize="24sp"
-                        android:textStyle="bold"
-                        android:fontFamily="serif"
-                        android:textColor="@color/primary_brown"
-                        android:layout_marginStart="8dp" />
+                    <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="COFFEE SHOP" android:textSize="24sp" android:textStyle="bold" android:fontFamily="serif" android:textColor="@color/primary_brown" android:layout_marginStart="8dp" />
 
                     <!-- Refresh Button -->
-                    <com.google.android.material.button.MaterialButton
-                        android:id="@+id/btnRefresh"
-                        style="@style/Widget.Material3.Button.TextButton"
-                        android:layout_width="48dp"
-                        android:layout_height="48dp"
-                        android:text="🔄"
-                        android:textSize="18sp"
-                        android:textColor="@color/primary_brown"
-                        android:background="?attr/selectableItemBackgroundBorderless"
-                        android:minWidth="0dp"
-                        android:minHeight="0dp"
-                        android:padding="8dp"
-                        android:contentDescription="Cập nhật trạng thái bàn" />
+                    <com.google.android.material.button.MaterialButton android:id="@+id/btnRefresh" style="@style/Widget.Material3.Button.TextButton" android:layout_width="48dp" android:layout_height="48dp" android:text="🔄" android:textSize="18sp" android:textColor="@color/primary_brown" android:background="?attr/selectableItemBackgroundBorderless" android:minWidth="0dp" android:minHeight="0dp" android:padding="8dp" android:contentDescription="Update table status" />
 
                 </LinearLayout>
 
                 <!-- Menu bar -->
-                <View
-                    android:layout_width="match_parent"
-                    android:layout_height="1dp"
-                    android:background="@color/divider_brown"
-                    android:layout_marginBottom="4dp" />
+                <View android:layout_width="match_parent" android:layout_height="1dp" android:background="@color/divider_brown" android:layout_marginBottom="4dp" />
 
                 <!-- Last Update Time -->
-                <TextView
-                    android:id="@+id/lastUpdateTextView"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="Đang tải dữ liệu..."
-                    android:textSize="11sp"
-                    android:textColor="@color/text_hint"
-                    android:gravity="center"
-                    android:padding="4dp"
-                    android:background="@color/light_cream"
-                    android:alpha="0.8"
-                    android:drawableStart="@drawable/ic_coffee_clock"
-                    android:drawablePadding="4dp"
-                    android:drawableTint="@color/text_hint" />
+                <TextView android:id="@+id/lastUpdateTextView" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Loading data..." android:textSize="11sp" android:textColor="@color/text_hint" android:gravity="center" android:padding="4dp" android:background="@color/light_cream" android:alpha="0.8" android:drawableStart="@drawable/ic_coffee_clock" android:drawablePadding="4dp" android:drawableTint="@color/text_hint" />
 
             </LinearLayout>
 
             <!-- Main Content Frame -->
-            <FrameLayout
-                android:id="@+id/main_content_frame"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_below="@id/header_content"
-                android:layout_above="@+id/bottom_navigation_view">
+            <FrameLayout android:id="@+id/main_content_frame" android:layout_width="match_parent" android:layout_height="match_parent" android:layout_below="@id/header_content" android:layout_above="@+id/bottom_navigation_view">
 
                 <!-- Tables RecyclerView -->
-                <androidx.recyclerview.widget.RecyclerView
-                    android:id="@+id/recyclerViewTables"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:padding="8dp"
-                    android:clipToPadding="false"
-                    android:scrollbars="vertical"
-                    android:fadeScrollbars="true" />
+                <androidx.recyclerview.widget.RecyclerView android:id="@+id/recyclerViewTables" android:layout_width="match_parent" android:layout_height="match_parent" android:padding="8dp" android:clipToPadding="false" android:scrollbars="vertical" android:fadeScrollbars="true" />
 
                 <!-- Empty State Message -->
-                <LinearLayout
-                    android:id="@+id/emptyStateLayout"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center"
-                    android:orientation="vertical"
-                    android:visibility="gone">
+                <LinearLayout android:id="@+id/emptyStateLayout" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_gravity="center" android:orientation="vertical" android:visibility="gone">
 
-                    <ImageView
-                        android:layout_width="64dp"
-                        android:layout_height="64dp"
-                        android:src="@drawable/ic_coffee_logo"
-                        android:layout_gravity="center_horizontal"
-                        android:alpha="0.3"
-                        android:layout_marginBottom="16dp" />
+                    <ImageView android:layout_width="64dp" android:layout_height="64dp" android:src="@drawable/ic_coffee_logo" android:layout_gravity="center_horizontal" android:alpha="0.3" android:layout_marginBottom="16dp" />
 
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Đang tải danh sách bàn..."
-                        android:textColor="@color/text_hint"
-                        android:textSize="16sp"
-                        android:layout_gravity="center_horizontal" />
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Loading table list..." android:textColor="@color/text_hint" android:textSize="16sp" android:layout_gravity="center_horizontal" />
 
                 </LinearLayout>
 
                 <!-- Staff Info Layout (Hidden by default) -->
-                <ScrollView
-                    android:id="@+id/staffInfoLayout"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:background="@color/light_cream"
-                    android:visibility="gone"
-                    android:clickable="true"
-                    android:focusable="true"
-                    android:elevation="4dp">
+                <ScrollView android:id="@+id/staffInfoLayout" android:layout_width="match_parent" android:layout_height="match_parent" android:background="@color/light_cream" android:visibility="gone" android:clickable="true" android:focusable="true" android:elevation="4dp">
 
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="vertical"
-                        android:padding="24dp">
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="24dp">
 
                         <!-- Close Button -->
-                        <ImageButton
-                            android:id="@+id/btnCloseStaffInfo"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_gravity="end"
-                            android:background="?attr/selectableItemBackgroundBorderless"
-                            android:src="@drawable/ic_close"
-                            android:padding="8dp"
-                            android:contentDescription="Đóng"
-                            android:layout_marginBottom="16dp" />
+                        <ImageButton android:id="@+id/btnCloseStaffInfo" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_gravity="end" android:background="?attr/selectableItemBackgroundBorderless" android:src="@drawable/ic_close" android:padding="8dp" android:contentDescription="Close" android:layout_marginBottom="16dp" />
 
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="THÔNG TIN NHÂN VIÊN"
-                            android:textStyle="bold"
-                            android:textColor="@color/secondary_brown"
-                            android:textSize="20sp"
-                            android:layout_marginBottom="24dp"
-                            android:layout_gravity="center_horizontal" />
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="STAFF INFORMATION" android:textStyle="bold" android:textColor="@color/secondary_brown" android:textSize="20sp" android:layout_marginBottom="24dp" android:layout_gravity="center_horizontal" />
 
                         <!-- Staff Avatar Placeholder -->
-                        <ImageView
-                            android:layout_width="80dp"
-                            android:layout_height="80dp"
-                            android:src="@drawable/ic_user"
-                            android:layout_gravity="center_horizontal"
-                            android:layout_marginBottom="16dp"
-                            android:background="@drawable/circle_background"
-                            android:padding="16dp" />
+                        <ImageView android:layout_width="80dp" android:layout_height="80dp" android:src="@drawable/ic_user" android:layout_gravity="center_horizontal" android:layout_marginBottom="16dp" android:background="@drawable/circle_background" android:padding="16dp" />
 
                         <!-- Staff Details Card -->
-                        <com.google.android.material.card.MaterialCardView
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            app:cardCornerRadius="12dp"
-                            app:cardElevation="4dp"
-                            app:cardUseCompatPadding="true"
-                            android:layout_marginBottom="24dp">
+                        <com.google.android.material.card.MaterialCardView android:layout_width="match_parent" android:layout_height="wrap_content" app:cardCornerRadius="12dp" app:cardElevation="4dp" app:cardUseCompatPadding="true" android:layout_marginBottom="24dp">
 
-                            <LinearLayout
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:orientation="vertical"
-                                android:padding="20dp">
+                            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="20dp">
 
-                                <TextView
-                                    android:id="@+id/staffNameTextView"
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:text="Tên: Nguyễn Văn A"
-                                    android:textSize="16sp"
-                                    android:textColor="@color/text_primary"
-                                    android:lineSpacingExtra="4dp" />
+                                <TextView android:id="@+id/staffNameTextView" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Name: John Doe" android:textSize="16sp" android:textColor="@color/text_primary" android:lineSpacingExtra="4dp" />
 
-                                <TextView
-                                    android:id="@+id/staffLoginTimeTextView"
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:text="Giờ đăng nhập: 08:30"
-                                    android:textSize="14sp"
-                                    android:textColor="@color/text_hint"
-                                    android:layout_marginTop="8dp" />
+                                <TextView android:id="@+id/staffLoginTimeTextView" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Login time: 08:30" android:textSize="14sp" android:textColor="@color/text_hint" android:layout_marginTop="8dp" />
 
                                 <!-- Online Status Indicator -->
-                                <LinearLayout
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:orientation="horizontal"
-                                    android:layout_marginTop="12dp"
-                                    android:gravity="center_vertical">
+                                <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content" android:orientation="horizontal" android:layout_marginTop="12dp" android:gravity="center_vertical">
 
-                                    <View
-                                        android:layout_width="8dp"
-                                        android:layout_height="8dp"
-                                        android:background="@drawable/circle_green"
-                                        android:layout_marginEnd="8dp" />
+                                    <View android:layout_width="8dp" android:layout_height="8dp" android:background="@drawable/circle_green" android:layout_marginEnd="8dp" />
 
-                                    <TextView
-                                        android:layout_width="wrap_content"
-                                        android:layout_height="wrap_content"
-                                        android:text="Đang online"
-                                        android:textSize="12sp"
-                                        android:textColor="@color/success_green" />
+                                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Online" android:textSize="12sp" android:textColor="@color/success_green" />
 
                                 </LinearLayout>
 
@@ -244,34 +78,11 @@
                         </com.google.android.material.card.MaterialCardView>
 
                         <!-- Action Buttons -->
-                        <LinearLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:orientation="horizontal"
-                            android:gravity="center">
+                        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center">
 
-                            <com.google.android.material.button.MaterialButton
-                                android:id="@+id/btnBack"
-                                style="@style/Widget.MaterialComponents.Button.TextButton"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="Quay lại"
-                                android:textColor="@color/light_brown"
-                                android:layout_marginEnd="16dp"
-                                app:icon="@drawable/outline_arrow_back_24backichjkhjhjkhjkhhkjgy"
-                                app:iconGravity="textStart" />
+                            <com.google.android.material.button.MaterialButton android:id="@+id/btnBack" style="@style/Widget.MaterialComponents.Button.TextButton" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Back" android:textColor="@color/light_brown" android:layout_marginEnd="16dp" app:icon="@drawable/outline_arrow_back_24backichjkhjhjkhjkhhkjgy" app:iconGravity="textStart" />
 
-                            <com.google.android.material.button.MaterialButton
-                                android:id="@+id/btnLogout"
-                                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="Đăng xuất"
-                                android:textColor="@color/error_red"
-                                app:strokeColor="@color/error_red"
-                                app:icon="@drawable/baseline_logout_24"
-                                app:iconGravity="textStart"
-                                app:iconTint="@color/error_red" />
+                            <com.google.android.material.button.MaterialButton android:id="@+id/btnLogout" style="@style/Widget.MaterialComponents.Button.OutlinedButton" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Logout" android:textColor="@color/error_red" app:strokeColor="@color/error_red" app:icon="@drawable/baseline_logout_24" app:iconGravity="textStart" app:iconTint="@color/error_red" />
 
                         </LinearLayout>
 
@@ -281,61 +92,19 @@
             </FrameLayout>
 
             <!-- Bottom Navigation -->
-            <com.google.android.material.bottomnavigation.BottomNavigationView
-                android:id="@+id/bottom_navigation_view"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_alignParentBottom="true"
-                android:background="@color/bottom_nav_background"
-                app:itemIconTint="@color/bottom_nav_item_color_selector"
-                app:itemTextColor="@color/bottom_nav_item_color_selector"
-                app:menu="@menu/bottom_navigation_menu"
-                app:elevation="8dp" />
+            <com.google.android.material.bottomnavigation.BottomNavigationView android:id="@+id/bottom_navigation_view" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_alignParentBottom="true" android:background="@color/bottom_nav_background" app:itemIconTint="@color/bottom_nav_item_color_selector" app:itemTextColor="@color/bottom_nav_item_color_selector" app:menu="@menu/bottom_navigation_menu" app:elevation="8dp" />
 
         </RelativeLayout>
 
         <!-- Floating Action Button for Quick Refresh -->
-        <com.google.android.material.floatingactionbutton.FloatingActionButton
-            android:id="@+id/fabRefresh"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="bottom|end"
-            android:layout_margin="16dp"
-            android:layout_marginBottom="80dp"
-            android:src="@drawable/ic_refresh"
-            android:contentDescription="Cập nhật nhanh"
-            app:tint="@android:color/white"
-            app:backgroundTint="@color/primary_brown"
-            app:elevation="6dp"
-            app:pressedTranslationZ="12dp" />
+        <com.google.android.material.floatingactionbutton.FloatingActionButton android:id="@+id/fabRefresh" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_gravity="bottom|end" android:layout_margin="16dp" android:layout_marginBottom="80dp" android:src="@drawable/ic_refresh" android:contentDescription="Quick refresh" app:tint="@android:color/white" app:backgroundTint="@color/primary_brown" app:elevation="6dp" app:pressedTranslationZ="12dp" />
 
         <!-- Network Status Indicator -->
-        <LinearLayout
-            android:id="@+id/networkStatusLayout"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="top|end"
-            android:layout_margin="16dp"
-            android:background="@drawable/rounded_background"
-            android:padding="8dp"
-            android:orientation="horizontal"
-            android:gravity="center_vertical"
-            android:visibility="gone">
+        <LinearLayout android:id="@+id/networkStatusLayout" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_gravity="top|end" android:layout_margin="16dp" android:background="@drawable/rounded_background" android:padding="8dp" android:orientation="horizontal" android:gravity="center_vertical" android:visibility="gone">
 
-            <View
-                android:id="@+id/networkStatusIndicator"
-                android:layout_width="8dp"
-                android:layout_height="8dp"
-                android:background="@drawable/circle_green"
-                android:layout_marginEnd="4dp" />
+            <View android:id="@+id/networkStatusIndicator" android:layout_width="8dp" android:layout_height="8dp" android:background="@drawable/circle_green" android:layout_marginEnd="4dp" />
 
-            <TextView
-                android:id="@+id/networkStatusText"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Online"
-                android:textSize="10sp"
-                android:textColor="@color/text_primary" />
+            <TextView android:id="@+id/networkStatusText" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Online" android:textSize="10sp" android:textColor="@color/text_primary" />
 
         </LinearLayout>
 

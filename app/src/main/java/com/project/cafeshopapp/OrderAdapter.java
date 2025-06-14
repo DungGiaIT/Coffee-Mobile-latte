@@ -23,6 +23,7 @@ public class OrderAdapter extends RecyclerView.Adapter<OrderAdapter.ViewHolder> 
 
     public interface OrderClickListener {
         void onViewDetailsClick(Order order);
+
         void onUpdateStatusClick(Order order);
     }
 
@@ -46,8 +47,10 @@ public class OrderAdapter extends RecyclerView.Adapter<OrderAdapter.ViewHolder> 
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-        Order order = orders.get(position);
-        holder.bind(order);
+        if (orders != null && position < orders.size()) {
+            Order order = orders.get(position);
+            holder.bind(order);
+        }
     }
 
     @Override
@@ -71,7 +74,7 @@ public class OrderAdapter extends RecyclerView.Adapter<OrderAdapter.ViewHolder> 
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
 
-            // Find all views
+            // Find all views with null checking
             orderId = itemView.findViewById(R.id.orderId);
             orderIdDetail = itemView.findViewById(R.id.orderIdDetail);
             orderStatus = itemView.findViewById(R.id.orderStatus);
@@ -84,56 +87,79 @@ public class OrderAdapter extends RecyclerView.Adapter<OrderAdapter.ViewHolder> 
             addressLayout = itemView.findViewById(R.id.addressLayout);
             noteLayout = itemView.findViewById(R.id.noteLayout);
 
-            // Get optional views if they exist
-            TextView customerInfo = itemView.findViewById(R.id.customerInfo);
-            TextView deliveryAddress = itemView.findViewById(R.id.deliveryAddress);
-            TextView orderNote = itemView.findViewById(R.id.orderNote);
-
             // Buttons
             btnViewDetails = itemView.findViewById(R.id.btnViewDetails);
             btnUpdateStatus = itemView.findViewById(R.id.btnUpdateStatus);
         }
 
         public void bind(Order order) {
-            if (order == null) return;
+            if (order == null)
+                return;
 
-            // Set basic order info
-            orderId.setText("Đơn hàng của bàn " + order.getTableId());
-            orderIdDetail.setText("ID: " + order.getId());
+            // Set basic order info with null checking
+            if (orderId != null) {
+                // Display table or delivery info
+                if (order.getTableId() != null && !order.getTableId().equals("NULL")) {
+                    orderId.setText("Order for " + order.getTableId());
+                } else {
+                    orderId.setText("Delivery Order");
+                }
+            }
+
+            if (orderIdDetail != null) {
+                orderIdDetail.setText("ID: " + order.getId());
+            }
 
             // Set status with appropriate styling
-            orderStatus.setText(order.getStatus() != null ? order.getStatus().toUpperCase() : "PENDING");
-            setupStatusColor(order.getStatus());
+            if (orderStatus != null) {
+                String status = order.getStatus() != null ? order.getStatus().toUpperCase() : "PENDING";
+                orderStatus.setText(status);
+                setupStatusColor(status);
+            }
 
-            // Set price
-            totalPrice.setText(order.getFormattedTotal());
+            // Set price - format as currency as in database
+            if (totalPrice != null) {
+                totalPrice.setText(String.format("%.2f€", order.getTotal()));
+            }
 
             // Set delivery method
-            setupDeliveryMethod(order.getDeliveryMethod());
-
-            // Show delivery address if applicable
-            if (order.getDeliveryMethod() != null &&
-                    order.getDeliveryMethod().equalsIgnoreCase("DELIVERY") &&
-                    order.getDeliveryAddress() != null) {
-
-                addressLayout.setVisibility(View.VISIBLE);
-                TextView deliveryAddressView = itemView.findViewById(R.id.deliveryAddress);
-                if (deliveryAddressView != null) {
-                    deliveryAddressView.setText(order.getDeliveryAddress());
+            setupDeliveryMethod(order.getDeliveryMethod()); // Display customer information if available
+            if (order.getCustomerName() != null && !order.getCustomerName().isEmpty()) {
+                TextView customerInfo = itemView.findViewById(R.id.customerInfo);
+                if (customerInfo != null && customerLayout != null) {
+                    customerLayout.setVisibility(View.VISIBLE);
+                    String customerText = "Customer: " + order.getCustomerName();
+                    if (order.getCustomerPhone() != null) {
+                        customerText += " - " + order.getCustomerPhone();
+                    }
+                    customerInfo.setText(customerText);
                 }
-            } else {
-                addressLayout.setVisibility(View.GONE);
+            } // Display note if available
+            if (order.getNote() != null && !order.getNote().isEmpty() && !order.getNote().equals("EMPTY")) {
+                TextView orderNote = itemView.findViewById(R.id.orderNote);
+                if (orderNote != null && noteLayout != null) {
+                    noteLayout.setVisibility(View.VISIBLE);
+                    orderNote.setText("Note: " + order.getNote());
+                }
             }
 
             // Setup buttons if listener is available
             if (listener != null) {
-                btnViewDetails.setOnClickListener(v -> listener.onViewDetailsClick(order));
-                btnUpdateStatus.setOnClickListener(v -> listener.onUpdateStatusClick(order));
+                if (btnViewDetails != null) {
+                    btnViewDetails.setOnClickListener(v -> listener.onViewDetailsClick(order));
+                }
+                if (btnUpdateStatus != null) {
+                    btnUpdateStatus.setOnClickListener(v -> listener.onUpdateStatusClick(order));
+                }
             }
         }
 
         private void setupStatusColor(String status) {
-            if (status == null) status = "PENDING";
+            if (orderStatus == null || context == null)
+                return;
+
+            if (status == null)
+                status = "PENDING";
 
             int backgroundColor;
             switch (status.toUpperCase()) {
@@ -156,7 +182,11 @@ public class OrderAdapter extends RecyclerView.Adapter<OrderAdapter.ViewHolder> 
         }
 
         private void setupDeliveryMethod(String method) {
-            if (method == null) method = "PICKUP";
+            if (deliveryIcon == null || deliveryMethod == null || context == null)
+                return;
+
+            if (method == null)
+                method = "PICKUP";
 
             String icon;
             int textColor;

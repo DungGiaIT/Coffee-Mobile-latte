@@ -61,14 +61,15 @@ public class TableRecyclerAdapter extends RecyclerView.Adapter<TableRecyclerAdap
         }
 
         public void bind(TableModel table, Context context, OnTableClickListener clickListener) {
-            if (table == null) return;
+            if (table == null)
+                return;
 
             // Validate the table data
             if (!table.isValid()) {
                 Log.w("TableAdapter", "Invalid table data detected for tableId: " + table.getTableId());
             }
 
-            tableNumber.setText(String.format("Bàn %d", table.getTableId()));
+            tableNumber.setText(String.format("Table %d", table.getTableId()));
 
             // Set click listener
             itemView.setOnClickListener(v -> {
@@ -82,15 +83,15 @@ public class TableRecyclerAdapter extends RecyclerView.Adapter<TableRecyclerAdap
 
             switch (status) {
                 case "reserved":
-                    setTableStatus(context, R.drawable.ic_reserved, "Đã đặt", R.color.status_serving);
+                    setTableStatus(context, R.drawable.ic_reserved, "Reserved", R.color.status_serving);
                     break;
                 case "occupied":
                 case "serving":
-                    setTableStatus(context, R.drawable.ic_coffee_clock, "Đang phục vụ", R.color.status_waiting);
+                    setTableStatus(context, R.drawable.ic_coffee_clock, "Currently serving", R.color.status_waiting);
                     break;
                 case "available":
                 default:
-                    setTableStatus(context, R.drawable.ic_table, "Còn trống", R.color.status_empty);
+                    setTableStatus(context, R.drawable.ic_table, "Available", R.color.status_empty);
                     break;
             }
         }
