@@ -81,11 +81,11 @@ public class TableActivity extends AppCompatActivity {
     }
 
     private void checkTableOrders(TableModel selectedTable, int position) {
-        int tableId = selectedTable.getTableId();
-        String tableIdParam = "eq.table" + tableId;
+        int tableId = selectedTable.getTableId();        String tableIdParam = "eq.table" + tableId;
 
-        // Get orders for this table
-        Call<List<Order>> call = apiService.getOrdersByTable(tableIdParam);
+        // Get orders for this table with select parameter
+        String selectFields = "id,tableId,total,status,customerName,customerEmail,customerPhone,note,createdAt";
+        Call<List<Order>> call = apiService.getOrdersByTableWithSelect(tableIdParam, selectFields);
         call.enqueue(new Callback<List<Order>>() {
             @Override
             public void onResponse(Call<List<Order>> call, Response<List<Order>> response) {
@@ -230,10 +230,9 @@ public class TableActivity extends AppCompatActivity {
         super.onResume();
         // Refresh data when returning to this activity
         fetchTablesFromApi();
-    }
-
-    @Override
+    }    @Override
     public void onBackPressed() {
+        super.onBackPressed();
         // Navigate back to MainActivity instead of closing
         Intent intent = new Intent(TableActivity.this, MainActivity.class);
         startActivity(intent);
@@ -250,10 +249,9 @@ public class TableActivity extends AppCompatActivity {
         for (int i = 0; i < tableList.size(); i++) {
             TableModel table = tableList.get(i);
             int tableId = table.getTableId();
-            final int position = i;
-
-            String tableIdParam = "eq.table" + tableId;
-            Call<List<Order>> call = apiService.getOrdersByTable(tableIdParam);
+            final int position = i;            String tableIdParam = "eq.table" + tableId;
+            String selectFields = "id,tableId,total,status";  // Only need minimal fields for checking
+            Call<List<Order>> call = apiService.getOrdersByTableWithSelect(tableIdParam, selectFields);
 
             call.enqueue(new Callback<List<Order>>() {
                 @Override
