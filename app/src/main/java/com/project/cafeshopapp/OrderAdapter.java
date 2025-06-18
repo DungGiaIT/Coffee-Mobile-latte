@@ -83,13 +83,11 @@ public class OrderAdapter extends RecyclerView.Adapter<OrderAdapter.ViewHolder> 
 
         public void bind(Order order) {
             if (order == null)
-                return;
-
-            // Set basic order info with null checking
+                return;            // Set basic order info with null checking
             if (orderId != null) {
                 // Display table or delivery info
-                if (order.getTableId() != null && !order.getTableId().equals("NULL")) {
-                    orderId.setText("Order for " + order.getTableId());
+                if (order.getTableId() != null && !order.getTableId().equals("NULL") && !order.getTableId().trim().isEmpty()) {
+                    orderId.setText("Table " + order.getTableId() + " Order");
                 } else {
                     orderId.setText("Delivery Order");
                 }

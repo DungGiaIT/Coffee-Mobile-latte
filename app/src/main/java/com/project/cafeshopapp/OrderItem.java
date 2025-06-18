@@ -2,12 +2,14 @@ package com.project.cafeshopapp;
 
 import com.google.gson.annotations.SerializedName;
 
-public class OrderItem {
-    @SerializedName("id")
+public class OrderItem {    @SerializedName("id")
     private String id;
 
-    @SerializedName("orderId") // Using camelCase as per the database schema
+    @SerializedName("orderId") // Match database: orderId (text)
     private String orderId;
+
+    @SerializedName("productId") // Match database: productId (text)
+    private String productId;
 
     @SerializedName("title")
     private String title;
@@ -16,9 +18,7 @@ public class OrderItem {
     private int quantity;
 
     @SerializedName("price")
-    private double price;
-
-    @SerializedName("size")
+    private double price;    @SerializedName("size")
     private String size;
 
     @SerializedName("milk")

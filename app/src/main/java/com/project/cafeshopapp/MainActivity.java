@@ -1,6 +1,9 @@
 package com.project.cafeshopapp;
 
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
@@ -13,6 +16,7 @@ import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
@@ -42,9 +46,9 @@ import retrofit2.Callback;
 import retrofit2.Response;
 
 public class MainActivity extends AppCompatActivity {
-    private static final String TAG = "MainActivity";
-    private static final int REFRESH_INTERVAL = 15000; // Reduced from 30s to 15s
+    private static final String TAG = "MainActivity";    private static final int REFRESH_INTERVAL = 15000; // Reduced from 30s to 15s
     private static final int FAST_REFRESH_INTERVAL = 5000; // 10 seconds for active mode
+    private static final int ORDER_ACTIVITY_REQUEST_CODE = 1001; // Request code for OrderActivity
 
     // API Configuration
     private static final String API_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVmZ3hzaWNxbGFyYXFhZXppb2hmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDg3MTk0ODIsImV4cCI6MjA2NDI5NTQ4Mn0.scTWf1VRknpvZ4WcDzswtWRPa9EmuJOpcsy86emIUP4";
@@ -76,6 +80,9 @@ public class MainActivity extends AppCompatActivity {
     private boolean isActiveMode = false; // Fast refresh when user is actively using app
     private boolean apiKeyValidated = false; // Track API key validation status
 
+    // Broadcast receiver for real-time table updates
+    private BroadcastReceiver tableUpdateReceiver;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -90,11 +97,11 @@ public class MainActivity extends AppCompatActivity {
         ApiClient.initCache(new File(getCacheDir(), "api-cache"));
 
         initBackgroundThreading();
-        initViews();
-        setupRecyclerView();
+        initViews();        setupRecyclerView();
         setupBottomNavigation();
         setupAutoRefresh();
         setupSwipeRefresh();
+        setupBroadcastReceiver(); // Setup real-time table updates
 
         // Load staff info in background to avoid blocking main thread
         loadStaffInfoAsync();
@@ -390,15 +397,13 @@ public class MainActivity extends AppCompatActivity {
             // Handle UI operations on main thread
             mainHandler.post(() -> {
                 String statusMessage = getStatusMessage(table.getStatus());
-                Toast.makeText(this, "Table " + table.getTableId() + " - " + statusMessage, Toast.LENGTH_SHORT).show();
-
-                // Navigate to OrderActivity
+                Toast.makeText(this, "Table " + table.getTableId() + " - " + statusMessage, Toast.LENGTH_SHORT).show();                // Navigate to OrderActivity
                 Intent intent = new Intent(MainActivity.this, OrderActivity.class);
                 intent.putExtra("tableNumber", table.getTableId());
                 intent.putExtra("tableStatus", table.getStatus());
                 intent.putExtra("tableId", table.getId());
                 intent.putExtra("apiKeyValid", apiKeyValidated); // Pass API status to next activity
-                startActivity(intent);
+                startActivityForResult(intent, ORDER_ACTIVITY_REQUEST_CODE);
             });
 
             // Update status in background if available and API is valid
@@ -422,9 +427,7 @@ public class MainActivity extends AppCompatActivity {
             default:
                 return "Status: " + status;
         }
-    }
-
-    private void updateTableStatusAsync(int tableId, String newStatus) {
+    }    private void updateTableStatusAsync(int tableId, String newStatus) {
         // Only update if API key is validated
         if (!apiKeyValidated) {
             Log.w(TAG, "Cannot update table status - API key not validated");
@@ -437,24 +440,16 @@ public class MainActivity extends AppCompatActivity {
         executorService.execute(() -> {
             try {
                 TableUpdateRequest updateRequest = new TableUpdateRequest(newStatus);
-                Call<List<TableModel>> call = apiService.updateTableStatusById("eq." + tableId, updateRequest);
+                Call<Void> call = apiService.updateTableStatusOnly("eq." + tableId, updateRequest);
 
-                call.enqueue(new Callback<List<TableModel>>() {
+                call.enqueue(new Callback<Void>() {
                     @Override
-                    public void onResponse(Call<List<TableModel>> call, Response<List<TableModel>> response) {
+                    public void onResponse(Call<Void> call, Response<Void> response) {
                         mainHandler.post(() -> {
-                            if (response.isSuccessful() && response.body() != null && !response.body().isEmpty()) {
-                                TableModel updatedTable = response.body().get(0);
-
-                                // Consistency check: verify that returned status matches what we expected
-                                if (!newStatus.equals(updatedTable.getStatus())) {
-                                    Log.w(TAG, "Status mismatch: Expected " + newStatus + ", got "
-                                            + updatedTable.getStatus());
-                                    // Consider handling the mismatch - maybe retry or notify user
-                                }
-                                Log.d(TAG, "Table " + tableId + " status updated to " + updatedTable.getStatus());
+                            if (response.isSuccessful()) {
+                                Log.d(TAG, "Table " + tableId + " status updated to " + newStatus + " (status-only endpoint)");
                                 Toast.makeText(MainActivity.this,
-                                        "✅ Table " + tableId + " has been updated to " + updatedTable.getStatus(),
+                                        "✅ Table " + tableId + " has been updated to " + newStatus,
                                         Toast.LENGTH_SHORT).show();
 
                                 // Immediate refresh after update
@@ -476,10 +471,8 @@ public class MainActivity extends AppCompatActivity {
                                 handleApiError(response);
                             }
                         });
-                    }
-
-                    @Override
-                    public void onFailure(Call<List<TableModel>> call, Throwable t) {
+                    }                    @Override
+                    public void onFailure(Call<Void> call, Throwable t) {
                         mainHandler.post(() -> {
                             Log.e(TAG, "Error updating table status: " + t.getMessage(), t);
                             Toast.makeText(MainActivity.this, "❌ Connection error when updating table " + tableId,
@@ -1028,11 +1021,19 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         }
-    }
-
-    @Override
+    }    @Override
     protected void onDestroy() {
         Log.d(TAG, "Activity being destroyed - cleaning up resources");
+
+        // Unregister broadcast receiver
+        if (tableUpdateReceiver != null) {
+            try {
+                unregisterReceiver(tableUpdateReceiver);
+                Log.d(TAG, "📡 BroadcastReceiver unregistered");
+            } catch (IllegalArgumentException e) {
+                Log.w(TAG, "BroadcastReceiver was not registered: " + e.getMessage());
+            }
+        }
 
         // First, stop any scheduled refresh tasks
         if (refreshHandler != null) {
@@ -1129,9 +1130,68 @@ public class MainActivity extends AppCompatActivity {
                     if (errorMessage.contains("CRITICAL")) {
                         Log.w(TAG, "Running critical task on main thread as last resort");
                         mainHandler.post(task);
-                    }
-                }
+                    }                }
             }
         }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        
+        if (requestCode == ORDER_ACTIVITY_REQUEST_CODE && resultCode == RESULT_OK) {
+            // OrderActivity completed successfully, immediately refresh data
+            Log.d(TAG, "🔄 OrderActivity completed - triggering immediate refresh");
+            
+            // Cancel any pending refresh and trigger immediate one
+            if (refreshHandler != null && refreshRunnable != null) {
+                refreshHandler.removeCallbacks(refreshRunnable);
+            }
+            
+            // Force immediate refresh
+            if (apiKeyValidated && !isRefreshing) {
+                Log.d(TAG, "📊 Immediate refresh triggered after order completion");
+                fetchTablesFromApi();
+            }
+            
+            // Resume normal refresh cycle
+            if (refreshHandler != null && refreshRunnable != null) {
+                int interval = isActiveMode ? FAST_REFRESH_INTERVAL : REFRESH_INTERVAL;
+                refreshHandler.postDelayed(refreshRunnable, interval);
+            }
+        }
+    }
+
+    private void setupBroadcastReceiver() {
+        tableUpdateReceiver = new BroadcastReceiver() {
+            @Override            public void onReceive(Context context, Intent intent) {
+                if ("REFRESH_TABLES".equals(intent.getAction())) {
+                    int tableNumber = intent.getIntExtra("tableNumber", -1);
+                    String newStatus = intent.getStringExtra("newStatus");
+                    
+                    Log.d(TAG, "🔄 BROADCAST RECEIVED: Table " + tableNumber + " → " + newStatus);
+                    
+                    // IMMEDIATE REFRESH - bypass isRefreshing check for broadcast updates
+                    if (apiKeyValidated) {
+                        Log.d(TAG, "⚡ IMMEDIATE REFRESH triggered by broadcast (forcing refresh)");
+                        
+                        // Force refresh by temporarily bypassing isRefreshing
+                        boolean wasRefreshing = isRefreshing;
+                        isRefreshing = false;
+                        fetchTablesFromApi();
+                        
+                        // Restore the original state if it was refreshing
+                        if (wasRefreshing) {
+                            isRefreshing = true;
+                        }
+                    } else {
+                        Log.d(TAG, "⏳ Refresh skipped - API not validated");
+                    }
+                }
+            }};
+          // Register receiver for table update broadcasts
+        IntentFilter filter = new IntentFilter("REFRESH_TABLES");
+        ContextCompat.registerReceiver(this, tableUpdateReceiver, filter, ContextCompat.RECEIVER_NOT_EXPORTED);
+        Log.d(TAG, "📡 BroadcastReceiver registered for table updates");
     }
 }

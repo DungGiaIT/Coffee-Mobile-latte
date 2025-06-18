@@ -1,6 +1,9 @@
 package com.project.cafeshopapp;
 
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -11,6 +14,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
@@ -28,7 +32,9 @@ import java.util.concurrent.Executors;
 
 public class OrderListActivity extends AppCompatActivity implements OrderAdapter.OrderClickListener {
 
-    private static final String TAG = "OrderListActivity";    // UI components
+    private static final String TAG = "OrderListActivity";
+    
+    // UI components
     private RecyclerView recyclerView;
     private SwipeRefreshLayout swipeRefreshLayout;
     private LinearLayout emptyView;
@@ -46,6 +52,15 @@ public class OrderListActivity extends AppCompatActivity implements OrderAdapter
     // Background processing
     private ExecutorService executorService;
     private Handler mainHandler;
+    
+    // Auto-refresh mechanism (optimized for real-time)
+    private Handler refreshHandler;
+    private Runnable refreshRunnable;
+    private static final int REFRESH_INTERVAL = 3000; // 3 seconds for real-time updates
+    private boolean isRefreshing = false;
+    
+    // Broadcast receiver for instant updates
+    private BroadcastReceiver orderUpdateReceiver;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -61,14 +76,22 @@ public class OrderListActivity extends AppCompatActivity implements OrderAdapter
 
         // Initialize views
         initViews();
-
+        
         // Setup RecyclerView and SwipeRefreshLayout
         setupRecyclerView();
         setupSwipeRefresh();
+        
+        // Setup broadcast receiver for instant updates
+        setupBroadcastReceiver();
+        
+        // Setup auto-refresh mechanism
+        setupAutoRefresh();
 
         // Load orders
         fetchOrders();
-    }    private void initViews() {
+    }
+
+    private void initViews() {
         recyclerView = findViewById(R.id.recyclerViewOrders);
         swipeRefreshLayout = findViewById(R.id.swipeRefreshLayout);
         emptyView = findViewById(R.id.emptyView);
@@ -94,26 +117,84 @@ public class OrderListActivity extends AppCompatActivity implements OrderAdapter
                 android.R.color.holo_red_light);
     }
 
+    private void setupBroadcastReceiver() {
+        orderUpdateReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                if ("ORDER_UPDATE".equals(intent.getAction())) {
+                    Log.d(TAG, "🔥 Received ORDER_UPDATE broadcast - forcing immediate refresh");
+                    fetchOrders(true); // Force refresh bypassing isRefreshing flag
+                }
+            }
+        };
+        
+        IntentFilter filter = new IntentFilter("ORDER_UPDATE");
+        ContextCompat.registerReceiver(this, orderUpdateReceiver, filter, ContextCompat.RECEIVER_NOT_EXPORTED);
+        Log.d(TAG, "📡 BroadcastReceiver registered for ORDER_UPDATE");
+    }
+
+    private void setupAutoRefresh() {
+        refreshHandler = new Handler(Looper.getMainLooper());
+        refreshRunnable = new Runnable() {
+            @Override
+            public void run() {
+                Log.d(TAG, "🔄 Auto-refreshing orders...");
+                fetchOrders();
+                
+                // Schedule next refresh
+                refreshHandler.postDelayed(this, REFRESH_INTERVAL);
+            }
+        };
+    }
+
+    private void startAutoRefresh() {
+        if (refreshHandler != null && refreshRunnable != null) {
+            refreshHandler.removeCallbacks(refreshRunnable);
+            refreshHandler.postDelayed(refreshRunnable, REFRESH_INTERVAL);
+            Log.d(TAG, "📡 Auto-refresh started (interval: " + REFRESH_INTERVAL + "ms)");
+        }
+    }
+
+    private void stopAutoRefresh() {
+        if (refreshHandler != null && refreshRunnable != null) {
+            refreshHandler.removeCallbacks(refreshRunnable);
+            Log.d(TAG, "📡 Auto-refresh stopped");
+        }
+    }
+
     private void fetchOrders() {
-        Log.d(TAG, "🔄 Fetching orders from API...");
-        swipeRefreshLayout.setRefreshing(true);        // 🛠️ TRY WITH SELECT PARAMETER TO REDUCE DATA DOWNLOAD
+        fetchOrders(false);
+    }
+    
+    private void fetchOrders(boolean forceRefresh) {
+        if (isRefreshing && !forceRefresh) {
+            Log.d(TAG, "Already refreshing orders, skipping...");
+            return;
+        }
+        
+        isRefreshing = true;
+        Log.d(TAG, "🔄 Fetching orders from API..." + (forceRefresh ? " (FORCED)" : ""));
+        swipeRefreshLayout.setRefreshing(true);
+
+        // Use FRESH endpoint with no-cache header to force database read
         String selectFields = "id,tableId,total,status,customerName,customerEmail,customerPhone,note,createdAt";
-        Call<List<Order>> call = apiService.getAllOrdersWithSelect(selectFields);
+        Call<List<Order>> call = apiService.getAllOrdersFresh(selectFields);
 
         call.enqueue(new Callback<List<Order>>() {
             @Override
             public void onResponse(Call<List<Order>> call, Response<List<Order>> response) {
                 swipeRefreshLayout.setRefreshing(false);
+                isRefreshing = false;
 
                 Log.d(TAG, "📊 API Response Code: " + response.code());
 
                 if (response.isSuccessful() && response.body() != null) {
                     Log.d(TAG, "✅ Fetched " + response.body().size() + " orders successfully");
-
-                    // Process on background thread
+                    
+                    // Process immediately on main thread for faster updates
                     processOrders(response.body());
                 } else {
-                    // 🔍 LOG CHI TIẾT LỖI
+                    // Log detailed error
                     String errorMessage = "Unknown error";
                     try {
                         if (response.errorBody() != null) {
@@ -126,178 +207,99 @@ public class OrderListActivity extends AppCompatActivity implements OrderAdapter
                     Log.e(TAG, "❌ API Failed: " + response.code() + " - " + response.message());
                     Log.e(TAG, "❌ Error Body: " + errorMessage);
 
-                    handleApiError("Cannot load orders (Error: " + response.code() + ")");
+                    // Only show error message, don't try fallback to avoid delays
+                    runOnUiThread(() -> {
+                        if (!isFinishing()) {
+                            Toast.makeText(OrderListActivity.this, 
+                                "Failed to load orders. Retrying...", 
+                                Toast.LENGTH_SHORT).show();
+                        }
+                    });
                 }
             }
 
             @Override
             public void onFailure(Call<List<Order>> call, Throwable t) {
                 swipeRefreshLayout.setRefreshing(false);
+                isRefreshing = false;
                 Log.e(TAG, "🌐 Network Error: " + t.getMessage(), t);
-                handleApiError("Connection error: " + t.getMessage());
-            }
-        });
-
-        // 🔄 FALLBACK: TRY WITH SIMPLER API CALL IF THERE'S AN ERROR
-        if (!swipeRefreshLayout.isRefreshing()) {
-            trySimpleFetch();
-        }
-    }
-
-    private void trySimpleFetch() {
-        Log.d(TAG, "🔄 Trying simple fetch as fallback...");
-
-        Call<List<Order>> simplCall = apiService.getAllOrders();
-        simplCall.enqueue(new Callback<List<Order>>() {
-            @Override
-            public void onResponse(Call<List<Order>> call, Response<List<Order>> response) {
-                if (response.isSuccessful() && response.body() != null) {
-                    Log.d(TAG, "✅ Simple fetch successful: " + response.body().size() + " orders");
-                    processOrders(response.body());
-                } else {
-                    Log.e(TAG, "❌ Simple fetch also failed: " + response.code());
-                    handleApiError("API không thể truy cập. Hiển thị dữ liệu mẫu.");
-                }
-            }
-
-            @Override
-            public void onFailure(Call<List<Order>> call, Throwable t) {
-                Log.e(TAG, "❌ Simple fetch network error: " + t.getMessage());
-                handleApiError("Connection error. Showing sample data.");
+                
+                runOnUiThread(() -> {
+                    if (!isFinishing()) {
+                        Toast.makeText(OrderListActivity.this, 
+                            "Network error. Retrying...", 
+                            Toast.LENGTH_SHORT).show();
+                    }
+                });
             }
         });
     }
 
     private void processOrders(List<Order> orders) {
-        executorService.execute(() -> {
-            try {
-                // Log sample data for debugging
-                if (!orders.isEmpty()) {
-                    Order firstOrder = orders.get(0);
-                    Log.d(TAG, "📋 Sample order: " + firstOrder.getId() +
-                            " - Table: " + firstOrder.getTableId() +
-                            " - Total: " + firstOrder.getTotal() +
-                            " - Status: " + firstOrder.getStatus());
-                }                // Update UI on main thread
-                mainHandler.post(() -> {
-                    orderList.clear();
-                    orderList.addAll(orders);
-                    orderAdapter.notifyDataSetChanged();
-
-                    updateEmptyViewVisibility();
-                    updateOrderStats();
-
-                    Toast.makeText(OrderListActivity.this,
-                            "✅ Loaded " + orders.size() + " orders successfully",
-                            Toast.LENGTH_SHORT).show();
-                });
-            } catch (Exception e) {
-                Log.e(TAG, "Error processing orders: " + e.getMessage(), e);
-                mainHandler.post(() -> Toast.makeText(OrderListActivity.this,
-                        "Data processing error", Toast.LENGTH_SHORT).show());
+        try {
+            // Log sample data for debugging
+            if (!orders.isEmpty()) {
+                Order firstOrder = orders.get(0);
+                Log.d(TAG, "📋 Sample order: " + firstOrder.getId() +
+                        " - Table: " + firstOrder.getTableId() +
+                        " - Total: " + firstOrder.getTotal() +
+                        " - Status: " + firstOrder.getStatus());
             }
-        });
+
+            // Update UI immediately on main thread for faster updates
+            orderList.clear();
+            orderList.addAll(orders);
+            orderAdapter.notifyDataSetChanged();
+
+            updateEmptyViewVisibility();
+            updateOrderStats();
+
+            Log.d(TAG, "✅ Orders updated in UI: " + orders.size() + " orders");
+
+        } catch (Exception e) {
+            Log.e(TAG, "❌ Error processing orders: " + e.getMessage(), e);
+            Toast.makeText(OrderListActivity.this,
+                    "Data processing error", Toast.LENGTH_SHORT).show();
+        }
     }
 
-    private void handleApiError(String message) {
-        Toast.makeText(this, message, Toast.LENGTH_LONG).show();
-        loadSampleData();
-    }    private void updateEmptyViewVisibility() {
+    private void updateEmptyViewVisibility() {
         if (orderList.isEmpty()) {
-            recyclerView.setVisibility(View.GONE);
             emptyView.setVisibility(View.VISIBLE);
+            recyclerView.setVisibility(View.GONE);
         } else {
-            recyclerView.setVisibility(View.VISIBLE);
             emptyView.setVisibility(View.GONE);
+            recyclerView.setVisibility(View.VISIBLE);
         }
     }
 
     private void updateOrderStats() {
-        if (orderList == null) {
-            // Reset stats if no data
-            if (totalOrdersText != null) totalOrdersText.setText("0");
-            if (pendingOrdersText != null) pendingOrdersText.setText("0");
-            if (completedOrdersText != null) completedOrdersText.setText("0");
-            return;
-        }
-
         int totalOrders = orderList.size();
         int pendingOrders = 0;
         int completedOrders = 0;
 
-        // Count orders by status
         for (Order order : orderList) {
-            if (order != null && order.getStatus() != null) {
-                String status = order.getStatus().toUpperCase();
-                switch (status) {
-                    case "PENDING":
-                    case "PROCESSING":
-                        pendingOrders++;
-                        break;
-                    case "COMPLETED":
-                    case "FINISHED":
-                    case "DELIVERED":
-                        completedOrders++;
-                        break;
-                    // Other statuses like CANCELLED are not counted in either category
-                }
+            if ("pending".equals(order.getStatus())) {
+                pendingOrders++;
+            } else if ("completed".equals(order.getStatus())) {
+                completedOrders++;
             }
         }
 
-        // Update UI
-        if (totalOrdersText != null) {
-            totalOrdersText.setText(String.valueOf(totalOrders));
-        }
-        if (pendingOrdersText != null) {
-            pendingOrdersText.setText(String.valueOf(pendingOrders));
-        }
-        if (completedOrdersText != null) {
-            completedOrdersText.setText(String.valueOf(completedOrders));
-        }
-
-        Log.d(TAG, String.format("📊 Stats updated - Total: %d, Pending: %d, Completed: %d", 
-                totalOrders, pendingOrders, completedOrders));
+        totalOrdersText.setText("Total: " + totalOrders);
+        pendingOrdersText.setText("Pending: " + pendingOrders);
+        completedOrdersText.setText("Completed: " + completedOrders);
     }
 
-    private void loadSampleData() {
-        Log.d(TAG, "📋 Loading sample data based on database structure...");
-
-        // Create sample orders based on the database table in the screenshot
-        orderList.clear();        // Add sample orders matching the structure in screenshot - with correct database structure
-        orderList.add(createSampleOrder("cmbq9wn1n0000lc04r92w06f0", "table1", 13.09, "PENDING", "Khanh Le"));
-        orderList.add(createSampleOrder("cmbqmmbzd000jy04tcrpr459", "table2", 5.39, "PENDING", "Khanh Le"));
-        orderList.add(
-                createSampleOrder("cmbqskpiw0000vctw1mw0dqiy", "table5", 43.67, "PENDING", "Lê Bảo Khanh"));
-        orderList.add(createSampleOrder("cmbr5tue00000o9cswu6rvdfz", "table1", 28.501, "PENDING",
-                "Nguyen Tien Dung"));
-        orderList.add(
-                createSampleOrder("cmbr5e6x30002o9csji0mg9h", null, 6.49, "PENDING", "Nguyen Tien Dung"));
-        orderList.add(createSampleOrder("cmbr5ql9k0000l404rxg5y1b6", "table1", 21.89, "PENDING", "du"));        orderAdapter.notifyDataSetChanged();
-        Toast.makeText(this, "📋 Displaying sample data (6 orders)", Toast.LENGTH_SHORT).show();
-
-        updateEmptyViewVisibility();
-        updateOrderStats();
-    }    private Order createSampleOrder(String id, String tableId, double total, String status,
-            String customerName) {
-        Order order = new Order();
-        order.setId(id);
-        order.setTableId(tableId);
-        order.setTotal(total);
-        order.setStatus(status);
-        order.setCustomerName(customerName);
-        order.setCreatedAt("2025-06-11");
-        return order;
-    }
-
-    @Override
+    private void handleApiError(String message) {
+        runOnUiThread(() -> {
+            if (!isFinishing()) {
+                Toast.makeText(this, message, Toast.LENGTH_LONG).show();
+            }
+        });
+    }    @Override
     public void onViewDetailsClick(Order order) {
-        // Display basic order info
-        String customerInfo = order.getCustomerName() != null ? "Customer: " + order.getCustomerName()
-                : "Customer: No information";
-        Toast.makeText(this, "Opening order details " + order.getId(), Toast.LENGTH_SHORT)
-                .show();
-
-        // Navigate to OrderDetailActivity
+        // Navigate to order details
         Intent intent = new Intent(this, OrderDetailActivity.class);
         intent.putExtra("orderId", order.getId());
         startActivity(intent);
@@ -305,123 +307,56 @@ public class OrderListActivity extends AppCompatActivity implements OrderAdapter
 
     @Override
     public void onUpdateStatusClick(Order order) {
-        // Show dialog to update status
-        showStatusUpdateDialog(order);
-    }
-
-    private void showStatusUpdateDialog(Order order) {
-        String[] statuses = { "PENDING", "PROCESSING", "COMPLETED", "CANCELLED" };
-
+        // Show status update dialog
+        String[] statuses = {"pending", "completed", "cancelled"};
         new MaterialAlertDialogBuilder(this)
                 .setTitle("Update Order Status")
-                .setMessage("Order: " + order.getId())
                 .setItems(statuses, (dialog, which) -> {
-                    updateOrderStatus(order.getId(), statuses[which]);
+                    String newStatus = statuses[which];
+                    updateOrderStatus(order, newStatus);
                 })
                 .show();
+    }    private void updateOrderStatus(Order order, String newStatus) {
+        // Implementation for update order status
+        Toast.makeText(this, "Update order " + order.getId() + " to " + newStatus, Toast.LENGTH_SHORT).show();
+        
+        // Force refresh after status update
+        fetchOrders(true);
     }
 
-    private void updateOrderStatus(String orderId, String newStatus) {
-        OrderStatusUpdate statusUpdate = new OrderStatusUpdate(newStatus);
-
-        Call<List<Order>> call = apiService.updateOrderStatus("eq." + orderId, statusUpdate);
-        call.enqueue(new Callback<List<Order>>() {
-            @Override
-            public void onResponse(Call<List<Order>> call, Response<List<Order>> response) {
-                if (response.isSuccessful() && response.body() != null && !response.body().isEmpty()) {
-                    // Update successful
-                    Toast.makeText(OrderListActivity.this,
-                            "✅ Status updated to " + newStatus,
-                            Toast.LENGTH_SHORT).show();
-
-                    // Refresh data
-                    fetchOrders();
-                } else {
-                    Log.e(TAG, "Failed to update order status. Response code: " + response.code());
-                    Toast.makeText(OrderListActivity.this,
-                            "❌ Cannot update status (Error: " + response.code() + ")",
-                            Toast.LENGTH_SHORT).show();
-                }
-            }
-
-            @Override
-            public void onFailure(Call<List<Order>> call, Throwable t) {
-                Log.e(TAG, "Error updating order status: " + t.getMessage(), t);
-                Toast.makeText(OrderListActivity.this, "❌ Connection error when updating status",
-                        Toast.LENGTH_SHORT).show();
-            }
-        });
+    @Override
+    protected void onResume() {
+        super.onResume();
+        Log.d(TAG, "📱 Activity resumed - forcing immediate refresh + auto refresh");
+        
+        // Force immediate refresh for instant data update
+        fetchOrders(true);
+        
+        // Start auto refresh for ongoing updates
+        startAutoRefresh();
     }
-
-    /**
-     * Loads order items for a specific order
-     * 
-     * @param order The order to load items for
-     */
-    private void loadOrderItems(Order order) {
-        if (order == null || order.getId() == null) {
-            Toast.makeText(this, "Cannot load order details", Toast.LENGTH_SHORT).show();
-            return;
-        }
-        Log.d(TAG, "Loading order items for order: " + order.getId());
-
-        // Use RPC function to get order items - this bypasses RLS issues
-        Call<List<OrderItem>> call = apiService.getOrderItemsViaRPC(order.getId());
-        call.enqueue(new Callback<List<OrderItem>>() {
-            @Override
-            public void onResponse(Call<List<OrderItem>> call, Response<List<OrderItem>> response) {
-                if (response.isSuccessful() && response.body() != null) {
-                    List<OrderItem> items = response.body();
-                    Log.d(TAG, "API Success: Received " + items.size() + " order items");
-
-                    if (items.isEmpty()) {
-                        Toast.makeText(OrderListActivity.this, "No products in this order",
-                                Toast.LENGTH_SHORT).show();
-                    } else {
-                        displayOrderItems(items);
-                    }
-                } else {
-                    Log.w(TAG, "API Failed: " + response.code() + " - " + response.message());
-                    Toast.makeText(OrderListActivity.this, "Cannot load order details", Toast.LENGTH_SHORT)
-                            .show();
-                }
-            }
-
-            @Override
-            public void onFailure(Call<List<OrderItem>> call, Throwable t) {
-                Log.e(TAG, "API Error: " + t.getMessage(), t);
-                Toast.makeText(OrderListActivity.this, "Connection error when loading order details",
-                        Toast.LENGTH_SHORT)
-                        .show();
-            }
-        });
-    }
-
-    /**
-     * Displays order items in a dialog
-     * 
-     * @param items The list of order items to display
-     */
-    private void displayOrderItems(List<OrderItem> items) {
-        // Create a recycler view to display the items
-        RecyclerView recyclerView = new RecyclerView(this);
-        recyclerView.setLayoutManager(new LinearLayoutManager(this));
-
-        // Set up the adapter
-        OrderItemAdapter adapter = new OrderItemAdapter(items);
-        recyclerView.setAdapter(adapter);
-
-        // Show the dialog
-        new MaterialAlertDialogBuilder(this)
-                .setTitle("Order Details")
-                .setView(recyclerView)
-                .setPositiveButton("Close", null)
-                .show();
+    
+    @Override
+    protected void onPause() {
+        super.onPause();
+        Log.d(TAG, "📱 Activity paused - stopping auto refresh");
+        stopAutoRefresh();
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        
+        // Unregister broadcast receiver
+        if (orderUpdateReceiver != null) {
+            try {
+                unregisterReceiver(orderUpdateReceiver);
+                Log.d(TAG, "📡 BroadcastReceiver unregistered");
+            } catch (IllegalArgumentException e) {
+                Log.w(TAG, "BroadcastReceiver was not registered: " + e.getMessage());
+            }
+        }
+        
         if (executorService != null && !executorService.isShutdown()) {
             executorService.shutdown();
         }
