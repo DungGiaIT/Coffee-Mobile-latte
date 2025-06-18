@@ -2,31 +2,32 @@ package com.project.cafeshopapp;
 
 import com.google.gson.annotations.SerializedName;
 
-public class Order {
-    @SerializedName("id")
+public class Order {    @SerializedName("id")
     private String id;
 
-    @SerializedName("tableId")
+    @SerializedName("tableId")  // Match database: tableId (text)
     private String tableId;
 
     @SerializedName("total")
-    private double total;    @SerializedName("status")
+    private double total;
+
+    @SerializedName("status")
     private String status;
 
-    @SerializedName("customerName")
+    @SerializedName("customerName")  // Match database: customerName (text)
     private String customerName;
 
-    @SerializedName("customerEmail")
+    @SerializedName("customerEmail")  // Match database: customerEmail (text)
     private String customerEmail;
 
-    @SerializedName("customerPhone")
+    @SerializedName("customerPhone")  // Match database: customerPhone (text)
     private String customerPhone;
 
     @SerializedName("note")
     private String note;
 
-    @SerializedName("createdAt")
-    private String createdAt;    // Constructors
+    @SerializedName("updatedAt")  // Match database: updatedAt
+    private String createdAt;// Constructors
     public Order() {}
 
     public Order(String id, String tableId, double total, String status) {

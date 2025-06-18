@@ -40,14 +40,13 @@
                     android:text="☕"
                     android:textSize="20sp"
                     android:layout_marginEnd="8dp"/>
-                
-                <TextView 
+                  <TextView 
                     android:id="@+id/orderId" 
                     android:layout_width="wrap_content" 
                     android:layout_height="wrap_content" 
-                    android:text="Table 1 Order" 
+                    android:text="Order" 
                     android:textSize="18sp" 
-                    android:textStyle="bold" 
+                    android:textStyle="bold"
                     android:textColor="#2E2E2E" 
                     android:fontFamily="sans-serif-medium"/>
             </LinearLayout>

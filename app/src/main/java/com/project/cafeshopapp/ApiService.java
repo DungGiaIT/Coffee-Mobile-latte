@@ -5,6 +5,7 @@ import java.util.List;
 import retrofit2.Call;
 import retrofit2.http.Body;
 import retrofit2.http.GET;
+import retrofit2.http.Headers;
 import retrofit2.http.PATCH;
 import retrofit2.http.POST;
 import retrofit2.http.Query;
@@ -16,9 +17,7 @@ public interface ApiService {
         Call<List<TableModel>> getAllTables();
 
         @GET("manager_table")
-        Call<List<TableModel>> getAllTablesWithSelect(@Query("select") String select);
-
-        @GET("manager_table")
+        Call<List<TableModel>> getAllTablesWithSelect(@Query("select") String select);        @GET("manager_table")
         Call<List<TableModel>> getTableById(@Query("tableId") String tableIdFilter);
 
         @GET("manager_table")
@@ -32,14 +31,17 @@ public interface ApiService {
         Call<List<TableModel>> updateTableStatusByRecordId(@Query("id") String idFilter,
                         @Body TableUpdateRequest updateRequest);
 
+        // Simple status-only update without full model response
+        @PATCH("manager_table")
+        Call<Void> updateTableStatusOnly(@Query("tableId") String tableIdFilter,
+                        @Body TableUpdateRequest updateRequest);
+
         @POST("manager_table")
         Call<List<TableModel>> createTable(@Body TableModel tableModel);
 
         // 📦 Order APIs - CẬP NHẬT THEO DATABASE STRUCTURE
         @GET("order")
-        Call<List<Order>> getAllOrders();
-
-        @GET("order")
+        Call<List<Order>> getAllOrders();        @GET("order")
         Call<List<Order>> getOrdersByTable(@Query("tableId") String tableIdFilter);
 
         @GET("order")
@@ -51,13 +53,30 @@ public interface ApiService {
         // 🔧 ADD SELECT PARAMETER TO CONTROL RETURNED DATA
         @GET("order")
         Call<List<Order>> getAllOrdersWithSelect(@Query("select") String select);
+          // 🔄 FORCE FRESH DATA - No Cache
+        @Headers("Cache-Control: no-cache")
+        @GET("order")
+        Call<List<Order>> getAllOrdersFresh(@Query("select") String select);
 
         @GET("order")
         Call<List<Order>> getOrdersByTableWithSelect(@Query("tableId") String tableIdFilter,
                         @Query("select") String select);
+        
+        // 🔄 FORCE FRESH DATA for specific table - No Cache
+        @Headers("Cache-Control: no-cache")
+        @GET("order")
+        Call<List<Order>> getOrdersByTableFresh(@Query("tableId") String tableIdFilter,
+                        @Query("select") String select);@PATCH("order")
+        Call<List<Order>> updateOrderStatus(@Query("id") String orderId, @Body OrderStatusUpdate statusUpdate);        // DELETE operations for orders
+        @retrofit2.http.DELETE("order")
+        Call<Void> deleteOrderById(@Query("id") String orderId);
 
-        @PATCH("order")
-        Call<List<Order>> updateOrderStatus(@Query("id") String orderId, @Body OrderStatusUpdate statusUpdate);
+        @retrofit2.http.DELETE("order")
+        Call<Void> deleteOrdersByTable(@Query("tableId") String tableIdFilter);
+
+        // RPC method for bulk operations (if available in Supabase)
+        @POST("rpc/delete_orders_by_table")
+        Call<Void> deleteOrdersByTableRPC(@Body DeleteOrdersRequest request);
 
         // 🛒 Product APIs (if needed)
         @GET("product")

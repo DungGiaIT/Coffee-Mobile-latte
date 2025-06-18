@@ -112,18 +112,16 @@ public class TableActivity extends AppCompatActivity {
                 updateTableStatus(tableId, "reserved", position);
             }
         });
-    }
-
-    private void updateTableStatus(int tableId, String newStatus, int position) {
+    }    private void updateTableStatus(int tableId, String newStatus, int position) {
         // Create update request
         TableUpdateRequest updateRequest = new TableUpdateRequest(newStatus);
 
-        Call<List<TableModel>> updateCall = apiService.updateTableStatusById("eq." + tableId, updateRequest);
-        updateCall.enqueue(new Callback<List<TableModel>>() {
+        Call<Void> updateCall = apiService.updateTableStatusOnly("eq." + tableId, updateRequest);
+        updateCall.enqueue(new Callback<Void>() {
             @Override
-            public void onResponse(Call<List<TableModel>> call, Response<List<TableModel>> response) {
+            public void onResponse(Call<Void> call, Response<Void> response) {
                 if (response.isSuccessful()) {
-                    Log.d(TAG, "Table " + tableId + " status updated to " + newStatus);
+                    Log.d(TAG, "Table " + tableId + " status updated to " + newStatus + " (status-only endpoint)");
                     Toast.makeText(TableActivity.this, "Table #" + tableId + " has been updated", Toast.LENGTH_SHORT)
                             .show();
 
@@ -137,8 +135,7 @@ public class TableActivity extends AppCompatActivity {
                     Intent intent = new Intent(TableActivity.this, OrderActivity.class);
                     intent.putExtra("tableNumber", tableId);
                     intent.putExtra("tableStatus", newStatus);
-                    startActivity(intent);
-                } else {
+                    startActivity(intent);                } else {
                     Log.e(TAG, "Failed to update table status. Response code: " + response.code());
                     Toast.makeText(TableActivity.this, "Cannot update table", Toast.LENGTH_SHORT).show();
 
@@ -154,7 +151,7 @@ public class TableActivity extends AppCompatActivity {
             }
 
             @Override
-            public void onFailure(Call<List<TableModel>> call, Throwable t) {
+            public void onFailure(Call<Void> call, Throwable t) {
                 Log.e(TAG, "Error updating table status: " + t.getMessage(), t);
                 Toast.makeText(TableActivity.this, "Connection error when updating table", Toast.LENGTH_SHORT).show();
             }
