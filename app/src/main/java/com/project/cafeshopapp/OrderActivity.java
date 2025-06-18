@@ -403,11 +403,10 @@ public class OrderActivity extends AppCompatActivity implements OrderAdapter.Ord
                 performTableStatusUpdate();
             }
         });
-    }
-      private void performTableStatusUpdateById(String recordId) {
+    }      private void performTableStatusUpdateById(String recordId) {
         Log.d(TAG, "📝 UPDATING table status in database using new status-only endpoint...");
         
-        TableUpdateRequest updateRequest = new TableUpdateRequest("available");
+        TableStatusOnlyRequest updateRequest = new TableStatusOnlyRequest("available");
         String tableIdFilter = "eq." + tableNumber;  // Use tableNumber instead of recordId for consistency
         
         Log.d(TAG, "📊 Database update: PATCH /manager_table?tableId=" + tableIdFilter + " SET status='available' (status-only)");
@@ -466,7 +465,7 @@ public class OrderActivity extends AppCompatActivity implements OrderAdapter.Ord
     }    private void performTableStatusUpdate() {
         Log.d(TAG, "📝 UPDATING table status in database using status-only endpoint...");
         
-        TableUpdateRequest updateRequest = new TableUpdateRequest("available");
+        TableStatusOnlyRequest updateRequest = new TableStatusOnlyRequest("available");
         String tableIdFilter = "eq." + tableNumber;
         
         Log.d(TAG, "📊 Database update: PATCH /manager_table?tableId=" + tableIdFilter + " SET status='available' (status-only)");

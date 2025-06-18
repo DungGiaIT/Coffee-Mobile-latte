@@ -2,17 +2,20 @@ package com.project.cafeshopapp;
 
 import com.google.gson.annotations.SerializedName;
 
-public class TableModel {    @SerializedName("id")
+public class TableModel {
+    @SerializedName("id")
     private String id;
 
     @SerializedName("tableId")  // Match database: tableId (int4)
     private int tableId;
 
     @SerializedName("status")
-    private String status;    @SerializedName("createdAt")  // Match database: createdAt
+    private String status;
+
+    @SerializedName("createdAt")  // Match database schema: createdAt (with 'd')
     private String createdAt;
 
-    @SerializedName("updatedAt")  // Match database: updatedAt  
+    @SerializedName("updatedAt")  // Match database schema: updatedAt (with 'd')  
     private String updatedAt;
 
     // Constructors
@@ -38,15 +41,15 @@ public class TableModel {    @SerializedName("id")
 
     public void setTableId(int tableId) {
         this.tableId = tableId;
-    }
-
-    public String getStatus() {
+    }    public String getStatus() {
         return status;
     }
 
     public void setStatus(String status) {
         this.status = status;
-    }    public String getCreatedAt() {
+    }
+
+    public String getCreatedAt() {
         return createdAt;
     }
 
