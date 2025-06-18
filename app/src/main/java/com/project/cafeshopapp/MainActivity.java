@@ -46,8 +46,8 @@ import retrofit2.Callback;
 import retrofit2.Response;
 
 public class MainActivity extends AppCompatActivity {
-    private static final String TAG = "MainActivity";    private static final int REFRESH_INTERVAL = 15000; // Reduced from 30s to 15s
-    private static final int FAST_REFRESH_INTERVAL = 5000; // 10 seconds for active mode
+    private static final String TAG = "MainActivity";
+    private static final int REFRESH_INTERVAL = 3000; // 3 seconds for realtime like OrderActivity
     private static final int ORDER_ACTIVITY_REQUEST_CODE = 1001; // Request code for OrderActivity
 
     // API Configuration
@@ -71,13 +71,13 @@ public class MainActivity extends AppCompatActivity {
     private TableRecyclerAdapter tableAdapter;
     private ApiService apiService;
 
-    // Auto-refresh & Background Threading
+    // Sync status flag - to perform auto-sync only once on startup
+    private boolean hasPerformedInitialSync = false; // Auto-refresh & Background Threading
     private Handler refreshHandler;
     private Handler mainHandler;
     private Runnable refreshRunnable;
     private ExecutorService executorService;
     private boolean isRefreshing = false;
-    private boolean isActiveMode = false; // Fast refresh when user is actively using app
     private boolean apiKeyValidated = false; // Track API key validation status
 
     // Broadcast receiver for real-time table updates
@@ -97,7 +97,8 @@ public class MainActivity extends AppCompatActivity {
         ApiClient.initCache(new File(getCacheDir(), "api-cache"));
 
         initBackgroundThreading();
-        initViews();        setupRecyclerView();
+        initViews();
+        setupRecyclerView();
         setupBottomNavigation();
         setupAutoRefresh();
         setupSwipeRefresh();
@@ -148,10 +149,24 @@ public class MainActivity extends AppCompatActivity {
         // Setup click listeners without heavy operations
         btnBack.setOnClickListener(v -> staffInfoLayout.setVisibility(View.GONE));
 
-        btnRefresh.setOnClickListener(v -> triggerManualRefresh());
+        btnRefresh.setOnClickListener(v -> {
+            Toast.makeText(this, "🔄 Refreshing tables...", Toast.LENGTH_SHORT).show();
+            if (apiKeyValidated) {
+                fetchTablesFromApi();
+            } else {
+                testApiConnectionAndFetchData();
+            }
+        });
 
         if (fabRefresh != null) {
-            fabRefresh.setOnClickListener(v -> triggerManualRefresh());
+            fabRefresh.setOnClickListener(v -> {
+                Toast.makeText(this, "🔄 Refreshing tables...", Toast.LENGTH_SHORT).show();
+                if (apiKeyValidated) {
+                    fetchTablesFromApi();
+                } else {
+                    testApiConnectionAndFetchData();
+                }
+            });
         }
     } // 🧪 TEST API KEY
 
@@ -324,7 +339,6 @@ public class MainActivity extends AppCompatActivity {
     private void setupSwipeRefresh() {
         swipeRefreshLayout.setOnRefreshListener(() -> {
             Log.d(TAG, "Pull-to-refresh triggered");
-            isActiveMode = true; // Enable fast refresh mode
 
             if (apiKeyValidated) {
                 fetchTablesFromApi();
@@ -343,45 +357,20 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setupAutoRefresh() {
+        refreshHandler = new Handler(Looper.getMainLooper());
         refreshRunnable = new Runnable() {
             @Override
             public void run() {
-                if (!isRefreshing) {
-                    Log.d(TAG, "Auto-refreshing table data... (Active mode: " + isActiveMode + ", API Valid: "
-                            + apiKeyValidated + ")");
+                Log.d(TAG, "🔄 Auto-refreshing tables... (API Valid: " + apiKeyValidated + ")");
 
-                    if (apiKeyValidated) {
-                        fetchTablesFromApi();
-                    } else {
-                        // Periodically retest API connection
-                        Log.d(TAG, "🔄 API key not validated, retesting connection...");
-                        testApiConnection();
-                    }
+                if (!isRefreshing && apiKeyValidated) {
+                    fetchTablesFromApi();
                 }
 
-                // Schedule next refresh
-                int interval = isActiveMode ? FAST_REFRESH_INTERVAL : REFRESH_INTERVAL;
-                refreshHandler.postDelayed(this, interval);
+                // Schedule next refresh - simple 3 second interval like OrderActivity
+                refreshHandler.postDelayed(this, REFRESH_INTERVAL);
             }
         };
-    }
-
-    private void triggerManualRefresh() {
-        isActiveMode = true; // Enable fast refresh for next few minutes
-
-        // Show toast on main thread mainHandler.post(() ->
-        Toast.makeText(this, "🔄 Updating table status...", Toast.LENGTH_SHORT).show();
-
-        if (apiKeyValidated) {
-            fetchTablesFromApi();
-        } else {
-            // Retest API connection if key was invalid
-            Log.d(TAG, "🔄 Manual refresh triggered, but API key not validated. Retesting...");
-            testApiConnectionAndFetchData();
-        }
-
-        // Reset to normal mode after 2 minutes
-        refreshHandler.postDelayed(() -> isActiveMode = false, 120000);
     }
 
     private void setupRecyclerView() {
@@ -397,7 +386,9 @@ public class MainActivity extends AppCompatActivity {
             // Handle UI operations on main thread
             mainHandler.post(() -> {
                 String statusMessage = getStatusMessage(table.getStatus());
-                Toast.makeText(this, "Table " + table.getTableId() + " - " + statusMessage, Toast.LENGTH_SHORT).show();                // Navigate to OrderActivity
+                Toast.makeText(this, "Table " + table.getTableId() + " - " + statusMessage, Toast.LENGTH_SHORT).show(); // Navigate
+                                                                                                                        // to
+                                                                                                                        // OrderActivity
                 Intent intent = new Intent(MainActivity.this, OrderActivity.class);
                 intent.putExtra("tableNumber", table.getTableId());
                 intent.putExtra("tableStatus", table.getStatus());
@@ -427,7 +418,9 @@ public class MainActivity extends AppCompatActivity {
             default:
                 return "Status: " + status;
         }
-    }    private void updateTableStatusAsync(int tableId, String newStatus) {
+    }
+
+    private void updateTableStatusAsync(int tableId, String newStatus) {
         // Only update if API key is validated
         if (!apiKeyValidated) {
             Log.w(TAG, "Cannot update table status - API key not validated");
@@ -436,10 +429,10 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
 
-        // Move API call to background thread
+        // Background database update - UI will update via realtime refresh (3s)
         executorService.execute(() -> {
             try {
-                TableUpdateRequest updateRequest = new TableUpdateRequest(newStatus);
+                TableStatusOnlyRequest updateRequest = new TableStatusOnlyRequest(newStatus);
                 Call<Void> call = apiService.updateTableStatusOnly("eq." + tableId, updateRequest);
 
                 call.enqueue(new Callback<Void>() {
@@ -447,21 +440,18 @@ public class MainActivity extends AppCompatActivity {
                     public void onResponse(Call<Void> call, Response<Void> response) {
                         mainHandler.post(() -> {
                             if (response.isSuccessful()) {
-                                Log.d(TAG, "Table " + tableId + " status updated to " + newStatus + " (status-only endpoint)");
-                                Toast.makeText(MainActivity.this,
-                                        "✅ Table " + tableId + " has been updated to " + newStatus,
-                                        Toast.LENGTH_SHORT).show();
+                                Log.d(TAG, "✅ Database updated: Table " + tableId + " → " + newStatus
+                                        + " (realtime refresh will show change)");
 
-                                // Immediate refresh after update
-                                fetchTablesFromApi();
+                                // Force immediate refresh to show change faster
+                                if (!isRefreshing) {
+                                    fetchTablesFromApi();
+                                }
                             } else {
-                                Log.e(TAG, "Failed to update table status. Response code: " + response.code());
+                                Log.e(TAG, "❌ Database update failed. Response code: " + response.code());
 
                                 if (response.code() == 401) {
                                     apiKeyValidated = false; // Mark API key as invalid
-                                                             // Toast.makeText(MainActivity.this, "❌ API key expired -
-                                                             // Cannot update table " + tableId,
-                                                             // Toast.LENGTH_LONG).show();
                                 } else {
                                     Toast.makeText(MainActivity.this,
                                             "❌ Cannot update table " + tableId + " (Error: " + response.code() + ")",
@@ -471,7 +461,9 @@ public class MainActivity extends AppCompatActivity {
                                 handleApiError(response);
                             }
                         });
-                    }                    @Override
+                    }
+
+                    @Override
                     public void onFailure(Call<Void> call, Throwable t) {
                         mainHandler.post(() -> {
                             Log.e(TAG, "Error updating table status: " + t.getMessage(), t);
@@ -501,8 +493,8 @@ public class MainActivity extends AppCompatActivity {
                 startActivity(intent);
                 return true;
             } else if (itemId == R.id.nav_notify) {
-                Toast.makeText(this, "🔔 Notifications", Toast.LENGTH_SHORT).show();
-                // TODO: Navigate to NotificationActivity
+                // Use notify button for table sync function
+                syncTableStatusWithOrders();
                 return true;
             } else if (itemId == R.id.nav_profile) {
                 staffInfoLayout.setVisibility(View.VISIBLE);
@@ -569,9 +561,10 @@ public class MainActivity extends AppCompatActivity {
             Log.d(TAG, "Already refreshing, skipping...");
             return;
         }
-
         isRefreshing = true;
-        Log.d(TAG, "Fetching tables from API..."); // Show refresh indicator on main thread
+        Log.d(TAG, "🔄 REALTIME REFRESH: Fetching tables from fresh database (3s interval)...");// Show refresh
+                                                                                                // indicator on main
+                                                                                                // thread
         mainHandler.post(() -> {
             if (!swipeRefreshLayout.isRefreshing()) {
                 swipeRefreshLayout.setRefreshing(true);
@@ -598,7 +591,8 @@ public class MainActivity extends AppCompatActivity {
                         return;
                     }
 
-                    Call<List<TableModel>> call = apiService.getAllTables();
+                    // 🔄 REALTIME DATA: Use fresh endpoint like OrderActivity
+                    Call<List<TableModel>> call = apiService.getAllTablesFresh();
                     call.enqueue(new Callback<List<TableModel>>() {
                         @Override
                         public void onResponse(Call<List<TableModel>> call, Response<List<TableModel>> response) {
@@ -730,9 +724,7 @@ public class MainActivity extends AppCompatActivity {
                             Log.d(TAG, "Sample table - ID: " + firstTable.getId() +
                                     ", TableID: " + firstTable.getTableId() +
                                     ", Status: " + firstTable.getStatus());
-                        }
-
-                        // Update UI on main thread with null check on activity state
+                        } // Update UI on main thread with null check on activity state
                         final boolean finalHasChanges = hasChanges;
                         mainHandler.post(() -> {
                             // Double-check activity state before touching UI
@@ -743,6 +735,18 @@ public class MainActivity extends AppCompatActivity {
                                     Toast.makeText(MainActivity.this, "🔄 Table status has been updated!",
                                             Toast.LENGTH_SHORT)
                                             .show();
+                                }
+
+                                // Perform initial sync only once when app starts
+                                if (!hasPerformedInitialSync) {
+                                    hasPerformedInitialSync = true;
+                                    Log.d(TAG, "🚀 Performing initial table status sync...");
+                                    // Delay sync by 2 seconds to let UI load first
+                                    mainHandler.postDelayed(() -> {
+                                        if (!isFinishing() && !isDestroyed()) {
+                                            syncTableStatusWithOrders();
+                                        }
+                                    }, 2000);
                                 }
                             }
                         });
@@ -773,7 +777,7 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
 
-        // Read error information first before attempting background processing
+        // Read error information first, before attempting background processing
         String errorBody;
         try {
             errorBody = response.errorBody() != null ? response.errorBody().string() : "No error body";
@@ -850,7 +854,7 @@ public class MainActivity extends AppCompatActivity {
 
                 if (oldTable == null || !oldTable.getStatus().equals(newTable.getStatus())) {
                     Log.d(TAG, "Table " + newTable.getTableId() + " status changed: " +
-                            (oldTable != null ? oldTable.getStatus() : "new") + " -> " + newTable.getStatus());
+                            (oldTable != null ? oldTable.getStatus() : "new") + " → " + newTable.getStatus());
                     return true;
                 }
             }
@@ -953,7 +957,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        Log.d(TAG, "Activity resumed - starting auto refresh");
+        Log.d(TAG, "📱 MainActivity resumed - starting auto-refresh");
 
         synchronized (this) {
             // Recreate ExecutorService if it's shutdown or null
@@ -963,65 +967,40 @@ public class MainActivity extends AppCompatActivity {
             }
         }
 
-        // First priority: Check if any pending UI updates are needed
-        mainHandler.post(() -> {
-            // Update staff info to reflect current API status (do this first as it's
-            // lightweight)
-            loadStaffInfoAsync();
+        // Simple immediate refresh like OrderActivity
+        if (apiKeyValidated) {
+            fetchTablesFromApi();
+        } else {
+            testApiConnection();
+        }
 
-            // Schedule data refresh with a small delay to avoid overwhelming the UI thread
-            mainHandler.postDelayed(() -> {
-                if (!isFinishing()) {
-                    if (apiKeyValidated) {
-                        fetchTablesFromApi();
-                    } else {
-                        // Retest API connection
-                        testApiConnection();
-                    }
-                }
-            }, 500); // Short delay to let UI stabilize first
-        });
-
-        // Start auto-refresh with a small buffer to avoid race conditions
-        isActiveMode = true; // Initially in active mode when resumed
-        int interval = isActiveMode ? FAST_REFRESH_INTERVAL : REFRESH_INTERVAL;
-        refreshHandler.postDelayed(refreshRunnable, 1000); // Initial refresh after 1 second
-
-        // Reset to normal mode after 30 seconds of inactivity
-        refreshHandler.postDelayed(() -> isActiveMode = false, 30000);
+        // Start auto-refresh like OrderActivity
+        startAutoRefresh();
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-        Log.d(TAG, "Activity paused - stopping auto refresh");
+        Log.d(TAG, "📱 MainActivity paused - stopping auto-refresh");
 
-        // First, stop any scheduled refresh tasks
-        if (refreshHandler != null) {
-            refreshHandler.removeCallbacks(refreshRunnable);
-        }
-
-        // Reset active mode to conserve battery
-        isActiveMode = false;
+        // Stop auto-refresh like OrderActivity
+        stopAutoRefresh();
 
         // Use a synchronized block to safely handle the ExecutorService
         synchronized (this) {
             // Only shutdown if the executor exists and is not already shutdown
             if (executorService != null && !executorService.isShutdown()) {
                 try {
-                    // Use shutdownNow only for immediate operations, normally prefer shutdown()
-                    // shutdownNow() can cause RejectedExecutionException for new tasks
-                    // but will interrupt currently running tasks - use with caution
                     Log.d(TAG, "Shutting down ExecutorService in onPause");
                     executorService.shutdown();
-
-                    // Don't wait for termination here as it could block the UI thread
                 } catch (Exception e) {
                     Log.e(TAG, "Error shutting down ExecutorService: " + e.getMessage(), e);
                 }
             }
         }
-    }    @Override
+    }
+
+    @Override
     protected void onDestroy() {
         Log.d(TAG, "Activity being destroyed - cleaning up resources");
 
@@ -1130,7 +1109,8 @@ public class MainActivity extends AppCompatActivity {
                     if (errorMessage.contains("CRITICAL")) {
                         Log.w(TAG, "Running critical task on main thread as last resort");
                         mainHandler.post(task);
-                    }                }
+                    }
+                }
             }
         }
     }
@@ -1138,60 +1118,304 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        
+
         if (requestCode == ORDER_ACTIVITY_REQUEST_CODE && resultCode == RESULT_OK) {
-            // OrderActivity completed successfully, immediately refresh data
-            Log.d(TAG, "🔄 OrderActivity completed - triggering immediate refresh");
-            
-            // Cancel any pending refresh and trigger immediate one
-            if (refreshHandler != null && refreshRunnable != null) {
-                refreshHandler.removeCallbacks(refreshRunnable);
-            }
-            
-            // Force immediate refresh
+            // OrderActivity completed - immediate refresh like OrderActivity pattern
+            Log.d(TAG, "🔄 OrderActivity completed - immediate refresh");
+
             if (apiKeyValidated && !isRefreshing) {
-                Log.d(TAG, "📊 Immediate refresh triggered after order completion");
                 fetchTablesFromApi();
-            }
-            
-            // Resume normal refresh cycle
-            if (refreshHandler != null && refreshRunnable != null) {
-                int interval = isActiveMode ? FAST_REFRESH_INTERVAL : REFRESH_INTERVAL;
-                refreshHandler.postDelayed(refreshRunnable, interval);
             }
         }
     }
 
     private void setupBroadcastReceiver() {
         tableUpdateReceiver = new BroadcastReceiver() {
-            @Override            public void onReceive(Context context, Intent intent) {
+            @Override
+            public void onReceive(Context context, Intent intent) {
                 if ("REFRESH_TABLES".equals(intent.getAction())) {
                     int tableNumber = intent.getIntExtra("tableNumber", -1);
                     String newStatus = intent.getStringExtra("newStatus");
-                    
+
                     Log.d(TAG, "🔄 BROADCAST RECEIVED: Table " + tableNumber + " → " + newStatus);
-                    
-                    // IMMEDIATE REFRESH - bypass isRefreshing check for broadcast updates
+
+                    // IMMEDIATE FRESH DATABASE CALL - like OrderActivity realtime updates
                     if (apiKeyValidated) {
-                        Log.d(TAG, "⚡ IMMEDIATE REFRESH triggered by broadcast (forcing refresh)");
-                        
-                        // Force refresh by temporarily bypassing isRefreshing
-                        boolean wasRefreshing = isRefreshing;
-                        isRefreshing = false;
-                        fetchTablesFromApi();
-                        
-                        // Restore the original state if it was refreshing
-                        if (wasRefreshing) {
-                            isRefreshing = true;
+                        Log.d(TAG, "⚡ IMMEDIATE REALTIME REFRESH triggered by broadcast");
+
+                        // Force immediate fresh database query
+                        if (!isRefreshing) {
+                            fetchTablesFromApi();
                         }
                     } else {
-                        Log.d(TAG, "⏳ Refresh skipped - API not validated");
+                        Log.d(TAG, "⏳ Realtime refresh skipped - API not validated");
                     }
                 }
-            }};
-          // Register receiver for table update broadcasts
+            }
+        };
+        // Register receiver for table update broadcasts
         IntentFilter filter = new IntentFilter("REFRESH_TABLES");
         ContextCompat.registerReceiver(this, tableUpdateReceiver, filter, ContextCompat.RECEIVER_NOT_EXPORTED);
         Log.d(TAG, "📡 BroadcastReceiver registered for table updates");
+    }
+
+    // Method to sync table status with actual orders
+    private void syncTableStatusWithOrders() {
+        if (!apiKeyValidated) {
+            Log.w(TAG, "Cannot sync table status - API key not validated");
+            return;
+        }
+
+        Log.d(TAG, "🔄 Syncing table status with orders...");
+
+        executorService.execute(() -> {
+            try {
+                // First, get all tables
+                Call<List<TableModel>> tablesCall = apiService.getAllTables();
+                Response<List<TableModel>> tablesResponse = tablesCall.execute();
+
+                if (!tablesResponse.isSuccessful() || tablesResponse.body() == null) {
+                    Log.e(TAG, "Failed to fetch tables for sync");
+                    return;
+                }
+
+                List<TableModel> tables = tablesResponse.body();
+                Log.d(TAG, "📋 Checking " + tables.size() + " tables for order status sync");
+
+                // Get all orders
+                Call<List<Order>> ordersCall = apiService.getAllOrders();
+                Response<List<Order>> ordersResponse = ordersCall.execute();
+
+                if (!ordersResponse.isSuccessful() || ordersResponse.body() == null) {
+                    Log.e(TAG, "Failed to fetch orders for sync");
+                    return;
+                }
+
+                List<Order> allOrders = ordersResponse.body();
+                Log.d(TAG, "📦 Found " + allOrders.size() + " total orders in system");
+
+                // Check each table
+                for (TableModel table : tables) {
+                    String expectedStatus = "available"; // Default status
+
+                    // Check if this table has any orders
+                    boolean hasOrders = false;
+                    for (Order order : allOrders) {
+                        String orderTableId = order.getTableId();
+                        String tableIdentifier = "table" + table.getTableId();
+
+                        if (orderTableId != null && orderTableId.equals(tableIdentifier)) {
+                            hasOrders = true;
+                            break;
+                        }
+                    }
+
+                    if (hasOrders) {
+                        expectedStatus = "reserved";
+                    }
+
+                    // Update table status if it doesn't match expected status
+                    if (!expectedStatus.equals(table.getStatus())) {
+                        Log.d(TAG,
+                                "🔧 Table " + table.getTableId() + ": " + table.getStatus() + " → " + expectedStatus);
+                        updateTableStatusSync(table.getTableId(), expectedStatus);
+                    } else {
+                        Log.d(TAG, "✅ Table " + table.getTableId() + ": status correct (" + expectedStatus + ")");
+                    }
+                }
+
+                // Refresh UI after sync
+                mainHandler.post(() -> {
+                    fetchTablesFromApi();
+                    Toast.makeText(MainActivity.this, "🔄 Table status synchronized", Toast.LENGTH_SHORT).show();
+                });
+
+            } catch (Exception e) {
+                Log.e(TAG, "Error in syncTableStatusWithOrders: " + e.getMessage(), e);
+                mainHandler.post(() -> {
+                    Toast.makeText(MainActivity.this, "❌ Failed to sync table status", Toast.LENGTH_SHORT).show();
+                });
+            }
+        });
+    } // Synchronous table status update for batch operations
+
+    private void updateTableStatusSync(int tableId, String newStatus) {
+        try {
+            // Use database-compliant request as primary method
+            DatabaseCompliantRequest updateRequest = new DatabaseCompliantRequest(newStatus);
+
+            // Use tableId filter
+            Call<Void> call = apiService.updateTableStatusDatabaseCompliant("eq." + tableId, updateRequest);
+
+            Log.d(TAG, "🔧 Updating table " + tableId + " with database-compliant request to status: " + newStatus);
+
+            Response<Void> response = call.execute();
+
+            if (response.isSuccessful()) {
+                Log.d(TAG, "✅ Table " + tableId + " updated to " + newStatus);
+            } else {
+                Log.e(TAG,
+                        "❌ Failed to update table " + tableId + " to " + newStatus + " - Response: " + response.code());
+
+                // Log detailed error information
+                try {
+                    String errorBody = response.errorBody() != null ? response.errorBody().string() : "No error body";
+                    Log.e(TAG, "❌ Error details for table " + tableId + ": " + errorBody);
+                } catch (Exception e) {
+                    Log.e(TAG, "Could not read error body: " + e.getMessage());
+                }
+
+                // Try fallback method with original endpoint
+                Log.d(TAG, "🔄 Trying fallback method for table " + tableId);
+                tryFallbackUpdate(tableId, newStatus);
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error updating table " + tableId + " status: " + e.getMessage(), e);
+            // Try fallback on exception
+            tryFallbackUpdate(tableId, newStatus);
+        }
+    } // Fallback method using the original working endpoint
+
+    private void tryFallbackUpdate(int tableId, String newStatus) {
+        try { // Try fallback attempt 0 FIRST: Database-compliant request with only existing
+              // fields
+            Log.d(TAG, "🔄 Fallback attempt 0: Using database-compliant request with only existing fields");
+            DatabaseCompliantRequest compliantRequest = new DatabaseCompliantRequest(newStatus);
+            String tableIdFilter = "eq." + tableId;
+
+            Call<Void> compliantCall = apiService.updateTableStatusDatabaseCompliant(tableIdFilter, compliantRequest);
+            Response<Void> compliantResponse = compliantCall.execute();
+
+            if (compliantResponse.isSuccessful()) {
+                Log.d(TAG, "✅ Fallback success (database-compliant): Table " + tableId + " updated to " + newStatus);
+                return;
+            } else {
+                Log.e(TAG, "❌ Fallback attempt 0 failed - Response: " + compliantResponse.code());
+                try {
+                    String errorBody = compliantResponse.errorBody() != null ? compliantResponse.errorBody().string()
+                            : "No error body";
+                    Log.e(TAG, "❌ Fallback attempt 0 error: " + errorBody);
+                } catch (Exception e) {
+                    Log.e(TAG, "Could not read error body: " + e.getMessage());
+                }
+            }
+
+            // Try fallback attempt 1: Complete request (legacy fallback)
+            Log.d(TAG, "🔄 Fallback attempt 1: Using complete request with all timestamp fields");
+            CompleteTableRequest completeRequest = new CompleteTableRequest(newStatus);
+
+            Call<Void> completeCall = apiService.updateTableStatusComplete(tableIdFilter, completeRequest);
+            Response<Void> completeResponse = completeCall.execute();
+
+            if (completeResponse.isSuccessful()) {
+                Log.d(TAG, "✅ Fallback success (complete): Table " + tableId + " updated to " + newStatus);
+                return;
+            } else {
+                Log.e(TAG, "❌ Fallback attempt 0 failed - Response: " + completeResponse.code());
+                try {
+                    String errorBody = completeResponse.errorBody() != null ? completeResponse.errorBody().string()
+                            : "No error body";
+                    Log.e(TAG, "❌ Fallback attempt 0 error: " + errorBody);
+                } catch (Exception e) {
+                    Log.e(TAG, "Could not read error body: " + e.getMessage());
+                }
+            }
+            // Try different approaches
+            Log.d(TAG, "🔄 Fallback attempt 1: Using TableStatusOnlyRequest with tableId filter");
+            TableStatusOnlyRequest statusOnlyRequest = new TableStatusOnlyRequest(newStatus);
+            // tableIdFilter already defined above
+
+            Call<Void> statusOnlyCall = apiService.updateTableStatusOnly(tableIdFilter, statusOnlyRequest);
+            Response<Void> statusOnlyResponse = statusOnlyCall.execute();
+
+            if (statusOnlyResponse.isSuccessful()) {
+                Log.d(TAG, "✅ Fallback success (status-only): Table " + tableId + " updated to " + newStatus);
+                return;
+            } else {
+                Log.e(TAG, "❌ Fallback attempt 1 failed - Response: " + statusOnlyResponse.code());
+                try {
+                    String errorBody = statusOnlyResponse.errorBody() != null ? statusOnlyResponse.errorBody().string()
+                            : "No error body";
+                    Log.e(TAG, "❌ Fallback attempt 1 error: " + errorBody);
+                } catch (Exception e) {
+                    Log.e(TAG, "Could not read error body: " + e.getMessage());
+                }
+            }
+            // Try original method as last resort
+            Log.d(TAG, "🔄 Fallback attempt 2: Using TableStatusOnlyRequest with full response");
+            TableStatusOnlyRequest originalRequest = new TableStatusOnlyRequest(newStatus);
+            Call<List<TableModel>> originalCall = apiService.updateTableStatusById(tableIdFilter, originalRequest);
+            Response<List<TableModel>> originalResponse = originalCall.execute();
+            if (originalResponse.isSuccessful()) {
+                Log.d(TAG, "✅ Fallback success (original): Table " + tableId + " updated to " + newStatus);
+            } else {
+                // Try fallback attempt 3: Use bypass headers
+                Log.d(TAG, "🔄 Fallback attempt 3: Using bypass headers to avoid triggers");
+                TableStatusOnlyRequest bypassRequest = new TableStatusOnlyRequest(newStatus);
+                Call<Void> bypassCall = apiService.updateTableStatusBypassed(tableIdFilter, bypassRequest);
+                Response<Void> bypassResponse = bypassCall.execute();
+                if (bypassResponse.isSuccessful()) {
+                    Log.d(TAG, "✅ Fallback success (bypass): Table " + tableId + " updated to " + newStatus);
+                } else {
+                    // Try fallback attempt 4: Without service_role header
+                    Log.d(TAG, "🔄 Fallback attempt 4: Using anon role (RLS policies)");
+                    TableStatusOnlyRequest anonRequest = new TableStatusOnlyRequest(newStatus);
+                    Call<Void> anonCall = apiService.updateTableStatusOnly(tableIdFilter, anonRequest);
+                    Response<Void> anonResponse = anonCall.execute();
+                    if (anonResponse.isSuccessful()) {
+                        Log.d(TAG, "✅ Fallback success (anon): Table " + tableId + " updated to " + newStatus);
+                    } else {
+                        // Try fallback attempt 5: Use safe RPC function
+                        Log.d(TAG, "🔄 Fallback attempt 5: Using safe RPC function to bypass triggers");
+                        SafeUpdateRequest safeRequest = new SafeUpdateRequest(tableId, newStatus);
+                        Call<Void> safeCall = apiService.updateTableStatusSafe(safeRequest);
+                        Response<Void> safeResponse = safeCall.execute();
+                        if (safeResponse.isSuccessful()) {
+                            Log.d(TAG, "✅ Fallback success (safe RPC): Table " + tableId + " updated to " + newStatus);
+                        } else {
+                            // Try fallback attempt 6: Include timestamp fields for trigger
+                            Log.d(TAG, "🔄 Fallback attempt 6: Including timestamp fields for trigger compatibility");
+                            TriggerFixRequest triggerRequest = new TriggerFixRequest(newStatus);
+                            Call<Void> triggerCall = apiService.updateTableStatusTriggerFix(tableIdFilter,
+                                    triggerRequest);
+                            Response<Void> triggerResponse = triggerCall.execute();
+
+                            if (triggerResponse.isSuccessful()) {
+                                Log.d(TAG, "✅ Fallback success (trigger fix): Table " + tableId + " updated to "
+                                        + newStatus);
+                            } else {
+                                Log.e(TAG, "❌ ALL FALLBACK METHODS FAILED for table " + tableId + " - Response: "
+                                        + triggerResponse.code());
+                                try {
+                                    String errorBody = triggerResponse.errorBody() != null
+                                            ? triggerResponse.errorBody().string()
+                                            : "No error body";
+                                    Log.e(TAG, "❌ FINAL ERROR: " + errorBody);
+                                } catch (Exception e) {
+                                    Log.e(TAG, "Could not read final error body: " + e.getMessage());
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error in fallback update for table " + tableId + ": " + e.getMessage(), e);
+        }
+    }
+
+    private void startAutoRefresh() {
+        if (refreshHandler != null && refreshRunnable != null) {
+            refreshHandler.removeCallbacks(refreshRunnable);
+            refreshHandler.postDelayed(refreshRunnable, REFRESH_INTERVAL);
+            Log.d(TAG, "📡 Auto-refresh started (interval: " + REFRESH_INTERVAL + "ms)");
+        }
+    }
+
+    private void stopAutoRefresh() {
+        if (refreshHandler != null && refreshRunnable != null) {
+            refreshHandler.removeCallbacks(refreshRunnable);
+            Log.d(TAG, "📡 Auto-refresh stopped");
+        }
     }
 }

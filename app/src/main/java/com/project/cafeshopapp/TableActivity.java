@@ -114,7 +114,7 @@ public class TableActivity extends AppCompatActivity {
         });
     }    private void updateTableStatus(int tableId, String newStatus, int position) {
         // Create update request
-        TableUpdateRequest updateRequest = new TableUpdateRequest(newStatus);
+        TableStatusOnlyRequest updateRequest = new TableStatusOnlyRequest(newStatus);
 
         Call<Void> updateCall = apiService.updateTableStatusOnly("eq." + tableId, updateRequest);
         updateCall.enqueue(new Callback<Void>() {

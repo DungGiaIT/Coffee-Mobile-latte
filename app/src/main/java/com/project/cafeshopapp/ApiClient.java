@@ -96,13 +96,24 @@ public class ApiClient {
                             .addHeader("Authorization", "Bearer " + API_KEY)
                             .addHeader("Accept", "application/json")
                             .addHeader("Content-Type", "application/json")
-                            .addHeader("Prefer", "return=representation")
-                            // 🚀 Thêm headers tối ưu performance
+                            .addHeader("Prefer", "return=representation")                            // 🚀 Thêm headers tối ưu performance
                             .addHeader("User-Agent", "CoffeeShopApp/1.0")
                             .addHeader("Connection", "keep-alive")
-                            // 🔓 Bypass RLS for testing (remove in production)
-                            .addHeader("Role", "service_role")
+                            // 🔓 Bypass RLS for testing (remove in production) - TEMPORARILY DISABLED
+                            // .addHeader("Role", "service_role")
                             .build();
+
+                    // 📝 LOG REQUEST DETAILS  
+                    if (originalRequest.body() != null) {
+                        try {
+                            okio.Buffer buffer = new okio.Buffer();
+                            originalRequest.body().writeTo(buffer);
+                            String requestBody = buffer.readUtf8();
+                            Log.d(TAG, "📤 Request body: " + requestBody);
+                        } catch (Exception e) {
+                            Log.w(TAG, "Could not log request body: " + e.getMessage());
+                        }
+                    }
 
                     okhttp3.Response response = chain.proceed(newRequest);
 
